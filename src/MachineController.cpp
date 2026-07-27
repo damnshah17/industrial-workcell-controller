@@ -4,10 +4,15 @@
 
 namespace workcell {
 
-MachineController::MachineController()
+MachineController::MachineController(
+    SequenceController& sequenceController,
+    SafetyController& safetyController,
+    FaultManager& faultManager
+)
     : currentState_(MachineState::Offline),
-      emergencyStopActive_(false),
-      activeFault_(std::nullopt)
+      sequenceController_(sequenceController),
+      safetyController_(safetyController),
+      faultManager_(faultManager)
 {
 }
 
@@ -18,23 +23,32 @@ MachineState MachineController::getState() const
 
 bool MachineController::initialize()
 {
-    if (!transitionTo(MachineState::Initializing))
+    if (!transitionTo(
+            MachineState::Initializing
+        ))
     {
         return false;
     }
 
-    Logger::info("Machine initialization started.");
+    Logger::info(
+        "Machine initialization started."
+    );
 
-    // Phase 2 will initialize real/simulated hardware here.
+    Logger::info(
+        "Machine initialization completed."
+    );
 
-    Logger::info("Machine initialization completed.");
-
-    return transitionTo(MachineState::Idle);
+    return transitionTo(
+        MachineState::Idle
+    );
 }
 
 bool MachineController::start()
 {
-    if (emergencyStopActive_)
+    if (
+        safetyController_
+            .isEmergencyStopActive()
+    )
     {
         Logger::safety(
             "Start rejected because Emergency Stop is active."
@@ -43,7 +57,10 @@ bool MachineController::start()
         return false;
     }
 
-    if (activeFault_.has_value())
+    if (
+        faultManager_
+            .hasActiveFault()
+    )
     {
         Logger::error(
             "Start rejected because an active fault exists."
@@ -52,196 +69,199 @@ bool MachineController::start()
         return false;
     }
 
-    return transitionTo(MachineState::Running);
+    return transitionTo(
+        MachineState::Running
+    );
 }
 
 bool MachineController::pause()
 {
-    return transitionTo(MachineState::Paused);
+    return transitionTo(
+        MachineState::Paused
+    );
 }
 
 bool MachineController::resume()
 {
-    if (emergencyStopActive_)
+    if (
+        safetyController_
+            .isEmergencyStopActive()
+    )
     {
-        Logger::safety(
-            "Resume rejected because Emergency Stop is active."
-        );
-
         return false;
     }
 
-    if (activeFault_.has_value())
+    if (
+        faultManager_
+            .hasActiveFault()
+    )
     {
-        Logger::error(
-            "Resume rejected because an active fault exists."
-        );
-
         return false;
     }
 
-    return transitionTo(MachineState::Running);
+    return transitionTo(
+        MachineState::Running
+    );
 }
 
 bool MachineController::stop()
 {
-    if (!transitionTo(MachineState::Stopping))
+    if (!transitionTo(
+            MachineState::Stopping
+        ))
     {
         return false;
     }
 
+    sequenceController_.abort();
+
     Logger::info(
-        "Machine stopping and moving toward safe idle state."
+        "Machine stopping."
     );
 
-    // Phase 2 will stop equipment safely here.
-
-    return transitionTo(MachineState::Idle);
+    return transitionTo(
+        MachineState::Idle
+    );
 }
 
 bool MachineController::reset()
 {
-    if (currentState_ == MachineState::Faulted)
+    if (
+        currentState_
+        == MachineState::Faulted
+    )
     {
-        if (!activeFault_.has_value())
-        {
-            Logger::warning(
-                "Machine is Faulted but no active fault exists."
-            );
-        }
+        faultManager_.clearFault();
 
-        activeFault_.reset();
+        sequenceController_
+            .resetForNextCycle();
 
-        Logger::info("Active fault cleared.");
-
-        return transitionTo(MachineState::Idle);
+        return transitionTo(
+            MachineState::Idle
+        );
     }
 
-    if (currentState_ == MachineState::EmergencyStop)
+    if (
+        currentState_
+        == MachineState::EmergencyStop
+    )
     {
-        if (emergencyStopActive_)
+        if (
+            safetyController_
+                .isEmergencyStopActive()
+        )
         {
             Logger::safety(
-                "Reset rejected. Emergency Stop must be cleared first."
+                "Reset rejected because Emergency Stop remains active."
             );
 
             return false;
         }
 
-        Logger::info(
-            "Emergency Stop condition cleared. Resetting machine."
+        sequenceController_
+            .resetForNextCycle();
+
+        return transitionTo(
+            MachineState::Idle
         );
-
-        return transitionTo(MachineState::Idle);
     }
-
-    Logger::warning(
-        "Reset rejected because machine is not Faulted "
-        "or EmergencyStop."
-    );
 
     return false;
 }
 
 bool MachineController::emergencyStop()
 {
-    if (currentState_ == MachineState::EmergencyStop)
+    if (
+        !safetyController_
+            .activateEmergencyStop()
+    )
     {
-        Logger::warning(
-            "Emergency Stop is already active."
-        );
-
         return false;
     }
 
-    emergencyStopActive_ = true;
+    sequenceController_.abort();
 
-    Logger::safety("Emergency Stop activated.");
-
-    return transitionTo(MachineState::EmergencyStop);
+    return transitionTo(
+        MachineState::EmergencyStop
+    );
 }
 
 bool MachineController::clearEmergencyStop()
 {
-    if (!emergencyStopActive_)
-    {
-        Logger::warning(
-            "Emergency Stop is not currently active."
-        );
-
-        return false;
-    }
-
-    emergencyStopActive_ = false;
-
-    Logger::safety(
-        "Emergency Stop physical condition cleared. "
-        "Machine reset is still required."
-    );
-
-    return true;
+    return safetyController_
+        .clearEmergencyStop();
 }
 
-bool MachineController::triggerFault(
-    FaultCode code,
-    const std::string& message
-)
+void MachineController::update()
 {
     if (
-        currentState_ == MachineState::Offline
-        || currentState_ == MachineState::EmergencyStop
+        currentState_
+        != MachineState::Running
     )
     {
-        Logger::error(
-            "Fault cannot be entered from current machine state."
-        );
-
-        return false;
+        return;
     }
 
-    activeFault_ = Fault{
-        code,
-        message
-    };
+    sequenceController_.update();
 
-    Logger::error(
-        "Fault raised: "
-        + toString(code)
-        + " - "
-        + message
-    );
-
-    if (!transitionTo(MachineState::Faulted))
+    if (
+        sequenceController_.getState()
+        == CycleState::CycleFaulted
+    )
     {
-        activeFault_.reset();
+        const auto& sequenceFault =
+            sequenceController_.getFault();
 
-        return false;
+        if (sequenceFault.has_value())
+        {
+            faultManager_.raiseFault(
+                sequenceFault->code,
+                sequenceFault->message
+            );
+        }
+        else
+        {
+            faultManager_.raiseFault(
+                FaultCode::InitializationFailure,
+                "Sequence entered fault state without fault details."
+            );
+        }
+
+        transitionTo(
+            MachineState::Faulted
+        );
     }
-
-    return true;
 }
 
 bool MachineController::hasActiveFault() const
 {
-    return activeFault_.has_value();
+    return faultManager_
+        .hasActiveFault();
 }
 
 const std::optional<Fault>&
 MachineController::getActiveFault() const
 {
-    return activeFault_;
+    return faultManager_
+        .getActiveFault();
 }
 
 bool MachineController::isEmergencyStopActive() const
 {
-    return emergencyStopActive_;
+    return safetyController_
+        .isEmergencyStopActive();
 }
 
 bool MachineController::transitionTo(
     MachineState targetState
 )
 {
-    if (!isValidTransition(currentState_, targetState))
+    if (
+        !isValidTransition(
+            currentState_,
+            targetState
+        )
+    )
     {
         Logger::error(
             "Invalid state transition: "
@@ -259,7 +279,8 @@ bool MachineController::transitionTo(
         + toString(targetState)
     );
 
-    currentState_ = targetState;
+    currentState_ =
+        targetState;
 
     return true;
 }
@@ -269,10 +290,10 @@ bool MachineController::isValidTransition(
     MachineState to
 ) const
 {
-    // Emergency Stop takes priority over normal machine operation.
     if (
         to == MachineState::EmergencyStop
-        && from != MachineState::EmergencyStop
+        &&
+        from != MachineState::EmergencyStop
     )
     {
         return true;
@@ -315,4 +336,4 @@ bool MachineController::isValidTransition(
     return false;
 }
 
-}
+} // namespace workcell

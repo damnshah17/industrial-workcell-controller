@@ -1,7 +1,17 @@
 #include "faults/Fault.hpp"
+#include "faults/FaultManager.hpp"
+
 #include "machine/Command.hpp"
 #include "machine/MachineController.hpp"
 #include "machine/MachineState.hpp"
+
+#include "safety/SafetyController.hpp"
+#include "sequence/SequenceController.hpp"
+
+#include "simulation/SimConveyor.hpp"
+#include "simulation/SimGripper.hpp"
+#include "simulation/SimPartSensor.hpp"
+#include "simulation/SimRobotArm.hpp"
 
 #include <iostream>
 #include <string>
@@ -60,7 +70,8 @@ void printStatus(
     }
     else
     {
-        std::cout << "Active Fault: None\n";
+        std::cout
+            << "Active Fault: None\n";
     }
 
     std::cout << '\n';
@@ -70,7 +81,35 @@ void printStatus(
 
 int main()
 {
-    workcell::MachineController controller;
+    workcell::SimRobotArm robot;
+    workcell::SimConveyor conveyor;
+    workcell::SimGripper gripper;
+    workcell::SimPartSensor sensor;
+
+    robot.initialize();
+    conveyor.initialize();
+    gripper.initialize();
+    sensor.initialize();
+
+    workcell::SequenceController sequence(
+        robot,
+        conveyor,
+        gripper,
+        sensor
+    );
+
+    workcell::SafetyController safety(
+        robot,
+        conveyor
+    );
+
+    workcell::FaultManager faultManager;
+
+    workcell::MachineController controller(
+        sequence,
+        safety,
+        faultManager
+    );
 
     std::cout
         << "=====================================\n"
@@ -85,10 +124,15 @@ int main()
     {
         std::cout
             << "["
-            << workcell::toString(controller.getState())
+            << workcell::toString(
+                controller.getState()
+            )
             << "] > ";
 
-        if (!std::getline(std::cin, input))
+        if (!std::getline(
+                std::cin,
+                input
+            ))
         {
             break;
         }
@@ -99,12 +143,16 @@ int main()
         }
 
         const workcell::Command command =
-            workcell::parseCommand(input);
+            workcell::parseCommand(
+                input
+            );
 
         switch (command.type)
         {
             case workcell::CommandType::Status:
-                printStatus(controller);
+                printStatus(
+                    controller
+                );
                 break;
 
             case workcell::CommandType::Initialize:
@@ -146,10 +194,16 @@ int main()
                         ? "Simulated robot motion timeout"
                         : command.argument;
 
-                controller.triggerFault(
-                    workcell::FaultCode::MotionTimeout,
-                    message
-                );
+                if (
+                    faultManager.raiseFault(
+                        workcell::FaultCode::MotionTimeout,
+                        message
+                    )
+                )
+                {
+                    std::cout
+                        << "[CLI] Simulated fault injected.\n";
+                }
 
                 break;
             }
@@ -159,7 +213,9 @@ int main()
                 break;
 
             case workcell::CommandType::Exit:
-                std::cout << "Controller shutting down.\n";
+                std::cout
+                    << "Controller shutting down.\n";
+
                 return 0;
 
             case workcell::CommandType::Invalid:

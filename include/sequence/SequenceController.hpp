@@ -5,9 +5,11 @@
 #include "hardware/IRobotArm.hpp"
 #include "hardware/ISensor.hpp"
 #include "sequence/CycleState.hpp"
+#include "faults/Fault.hpp"
 
 #include <chrono>
 #include <optional>
+
 
 namespace workcell {
 
@@ -29,7 +31,11 @@ public:
 
     void update();
 
+    void abort();
+
     bool resetForNextCycle();
+
+    const std::optional<Fault>& getFault() const;
 
     unsigned int getTotalCycles() const;
 
@@ -53,6 +59,8 @@ private:
     unsigned int acceptedCycles_;
     unsigned int rejectedCycles_;
 
+    std::optional<Fault> fault_;
+
     std::optional<bool> inspectionAccepted_;
 
     std::chrono::milliseconds motionTimeout_;
@@ -69,6 +77,7 @@ private:
     bool hasStateTimedOut() const;
 
     void failCycle(
+        FaultCode code,
         const char* reason
     );
 };

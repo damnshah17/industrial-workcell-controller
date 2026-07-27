@@ -20,6 +20,7 @@ SequenceController::SequenceController(
       acceptedCycles_(0),
       rejectedCycles_(0),
       inspectionAccepted_(std::nullopt),
+      fault_(std::nullopt),
       motionTimeout_(
           std::chrono::milliseconds(3000)
       ),
@@ -41,6 +42,7 @@ bool SequenceController::startCycle(
     if (!verifyDevicesReady())
     {
         failCycle(
+            FaultCode::InitializationFailure,
             "Cannot start cycle because hardware is not ready."
         );
 
@@ -67,6 +69,8 @@ bool SequenceController::startCycle(
 
         return false;
     }
+
+    fault_.reset();
 
     inspectionAccepted_ =
         inspectionAccepted;
@@ -96,6 +100,7 @@ void SequenceController::update()
             if (!conveyor_.stop())
             {
                 failCycle(
+                    FaultCode::ConveyorFailure,
                     "Failed to stop conveyor."
                 );
 
@@ -111,6 +116,7 @@ void SequenceController::update()
                 ))
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Failed to start robot motion to Pick."
                 );
             }
@@ -123,6 +129,7 @@ void SequenceController::update()
             if (hasStateTimedOut())
             {
                 failCycle(
+                    FaultCode::MotionTimeout,
                     "Robot motion to Pick timed out."
                 );
 
@@ -140,6 +147,7 @@ void SequenceController::update()
             )
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Robot stopped before reaching Pick."
                 );
 
@@ -158,6 +166,7 @@ void SequenceController::update()
             if (!gripper_.close())
             {
                 failCycle(
+                    FaultCode::GripperFailure,
                     "Gripper failed to close."
                 );
 
@@ -173,6 +182,7 @@ void SequenceController::update()
                 ))
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Failed to start robot motion to Inspect."
                 );
             }
@@ -185,6 +195,7 @@ void SequenceController::update()
             if (hasStateTimedOut())
             {
                 failCycle(
+                    FaultCode::MotionTimeout,
                     "Robot motion to Inspect timed out."
                 );
 
@@ -202,6 +213,7 @@ void SequenceController::update()
             )
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Robot stopped before reaching Inspect."
                 );
 
@@ -220,6 +232,7 @@ void SequenceController::update()
             if (!inspectionAccepted_.has_value())
             {
                 failCycle(
+                    FaultCode::InspectionFailure,
                     "Inspection result is unavailable."
                 );
 
@@ -241,6 +254,7 @@ void SequenceController::update()
                     ))
                 {
                     failCycle(
+                        FaultCode::RobotCommunicationLoss,
                         "Failed to start motion to AcceptBin."
                     );
                 }
@@ -260,6 +274,7 @@ void SequenceController::update()
                     ))
                 {
                     failCycle(
+                        FaultCode::RobotCommunicationLoss,
                         "Failed to start motion to RejectBin."
                     );
                 }
@@ -273,6 +288,7 @@ void SequenceController::update()
             if (hasStateTimedOut())
             {
                 failCycle(
+                    FaultCode::MotionTimeout,
                     "Robot motion to AcceptBin timed out."
                 );
 
@@ -290,6 +306,7 @@ void SequenceController::update()
             )
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Robot stopped before reaching AcceptBin."
                 );
 
@@ -308,6 +325,7 @@ void SequenceController::update()
             if (hasStateTimedOut())
             {
                 failCycle(
+                    FaultCode::MotionTimeout,
                     "Robot motion to RejectBin timed out."
                 );
 
@@ -325,6 +343,7 @@ void SequenceController::update()
             )
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Robot stopped before reaching RejectBin."
                 );
 
@@ -343,6 +362,7 @@ void SequenceController::update()
             if (!gripper_.open())
             {
                 failCycle(
+                    FaultCode::GripperFailure,
                     "Gripper failed to release part."
                 );
 
@@ -358,6 +378,7 @@ void SequenceController::update()
                 ))
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Failed to start return motion."
                 );
             }
@@ -370,6 +391,7 @@ void SequenceController::update()
             if (hasStateTimedOut())
             {
                 failCycle(
+                    FaultCode::MotionTimeout,
                     "Robot return-to-home timed out."
                 );
 
@@ -387,6 +409,7 @@ void SequenceController::update()
             )
             {
                 failCycle(
+                    FaultCode::RobotCommunicationLoss,
                     "Robot stopped before reaching Home."
                 );
 
@@ -405,6 +428,7 @@ void SequenceController::update()
             if (!conveyor_.start())
             {
                 failCycle(
+                    FaultCode::ConveyorFailure,
                     "Failed to restart conveyor."
                 );
 
@@ -443,23 +467,41 @@ void SequenceController::update()
     }
 }
 
+void SequenceController::abort()
+{
+    robot_.stop();
+    conveyor_.stop();
+
+    Logger::warning(
+        "Production sequence aborted."
+    );
+}
+
 bool SequenceController::resetForNextCycle()
 {
     if (
-        currentState_
-        != CycleState::CycleComplete
+        currentState_ != CycleState::CycleComplete
+        &&
+        currentState_ != CycleState::CycleFaulted
     )
     {
         return false;
     }
 
     inspectionAccepted_.reset();
+    fault_.reset();
 
     transitionTo(
         CycleState::WaitingForPart
     );
 
     return true;
+}
+
+const std::optional<Fault>&
+SequenceController::getFault() const
+{
+    return fault_;
 }
 
 unsigned int
@@ -526,10 +568,16 @@ bool SequenceController::hasStateTimedOut() const
 }
 
 void SequenceController::failCycle(
+    FaultCode code,
     const char* reason
 )
 {
     Logger::error(reason);
+
+    fault_ = Fault{
+        code,
+        reason
+    };
 
     robot_.stop();
     conveyor_.stop();

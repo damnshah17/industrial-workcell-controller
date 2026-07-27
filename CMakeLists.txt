@@ -19,6 +19,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(
     workcell_controller
 
+    src/FaultManager.cpp
+    src/SafetyController.cpp
     src/MachineState.cpp
     src/MachineController.cpp
     src/Command.cpp

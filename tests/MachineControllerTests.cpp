@@ -1,149 +1,260 @@
 #include <gtest/gtest.h>
 
+#include "faults/FaultManager.hpp"
+#include "hardware/RobotPosition.hpp"
 #include "machine/MachineController.hpp"
 #include "machine/MachineState.hpp"
+#include "safety/SafetyController.hpp"
+#include "sequence/CycleState.hpp"
+#include "sequence/SequenceController.hpp"
+#include "simulation/SimConveyor.hpp"
+#include "simulation/SimGripper.hpp"
+#include "simulation/SimPartSensor.hpp"
+#include "simulation/SimRobotArm.hpp"
 
-using workcell::MachineController;
-using workcell::MachineState;
+#include <chrono>
+#include <thread>
 
-TEST(MachineControllerTest, StartsOffline)
+using namespace std::chrono_literals;
+
+namespace {
+
+class MachineControllerTest
+    : public ::testing::Test
 {
-    MachineController controller;
+protected:
+    workcell::SimRobotArm robot{1ms};
 
+    workcell::SimConveyor conveyor;
+    workcell::SimGripper gripper;
+    workcell::SimPartSensor sensor;
+
+    workcell::SequenceController sequence{
+        robot,
+        conveyor,
+        gripper,
+        sensor
+    };
+
+    workcell::SafetyController safety{
+        robot,
+        conveyor
+    };
+
+    workcell::FaultManager faults;
+
+    workcell::MachineController controller{
+        sequence,
+        safety,
+        faults
+    };
+
+    void SetUp() override
+    {
+        ASSERT_TRUE(robot.initialize());
+        ASSERT_TRUE(conveyor.initialize());
+        ASSERT_TRUE(gripper.initialize());
+        ASSERT_TRUE(sensor.initialize());
+    }
+};
+
+} // namespace
+
+TEST_F(
+    MachineControllerTest,
+    StartsOffline
+)
+{
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Offline
+        workcell::MachineState::Offline
     );
 }
 
-TEST(MachineControllerTest, InitializeMovesMachineToIdle)
+TEST_F(
+    MachineControllerTest,
+    InitializeMovesMachineToIdle
+)
 {
-    MachineController controller;
-
-    EXPECT_TRUE(controller.initialize());
+    EXPECT_TRUE(
+        controller.initialize()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Idle
+        workcell::MachineState::Idle
     );
 }
 
-TEST(MachineControllerTest, CannotStartWhileOffline)
+TEST_F(
+    MachineControllerTest,
+    CannotStartWhileOffline
+)
 {
-    MachineController controller;
-
-    EXPECT_FALSE(controller.start());
+    EXPECT_FALSE(
+        controller.start()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Offline
+        workcell::MachineState::Offline
     );
 }
 
-TEST(MachineControllerTest, StartFromIdleMovesToRunning)
+TEST_F(
+    MachineControllerTest,
+    StartFromIdleMovesToRunning
+)
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-
-    EXPECT_TRUE(controller.start());
+    EXPECT_TRUE(
+        controller.start()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Running
+        workcell::MachineState::Running
     );
 }
 
-TEST(MachineControllerTest, RunningMachineCanPause)
+TEST_F(
+    MachineControllerTest,
+    RunningMachineCanPause
+)
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
+    ASSERT_TRUE(
+        controller.start()
+    );
 
-    EXPECT_TRUE(controller.pause());
+    EXPECT_TRUE(
+        controller.pause()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Paused
+        workcell::MachineState::Paused
     );
 }
 
-TEST(MachineControllerTest, PausedMachineCanResume)
+TEST_F(
+    MachineControllerTest,
+    PausedMachineCanResume
+)
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
-    controller.pause();
+    ASSERT_TRUE(
+        controller.start()
+    );
 
-    EXPECT_TRUE(controller.resume());
+    ASSERT_TRUE(
+        controller.pause()
+    );
+
+    EXPECT_TRUE(
+        controller.resume()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Running
+        workcell::MachineState::Running
     );
 }
 
-TEST(MachineControllerTest, RunningMachineCanStop)
+TEST_F(
+    MachineControllerTest,
+    RunningMachineCanStop
+)
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
+    ASSERT_TRUE(
+        controller.start()
+    );
 
-    EXPECT_TRUE(controller.stop());
+    EXPECT_TRUE(
+        controller.stop()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Idle
+        workcell::MachineState::Idle
     );
 }
 
-TEST(MachineControllerTest, CannotPauseIdleMachine)
+TEST_F(
+    MachineControllerTest,
+    CannotPauseIdleMachine
+)
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-
-    EXPECT_FALSE(controller.pause());
+    EXPECT_FALSE(
+        controller.pause()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Idle
+        workcell::MachineState::Idle
     );
 }
 
-TEST(MachineControllerTest, CannotInitializeRunningMachine)
+TEST_F(
+    MachineControllerTest,
+    CannotInitializeRunningMachine
+)
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
+    ASSERT_TRUE(
+        controller.start()
+    );
 
-    EXPECT_FALSE(controller.initialize());
+    EXPECT_FALSE(
+        controller.initialize()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Running
+        workcell::MachineState::Running
     );
 }
 
-TEST(
+TEST_F(
     MachineControllerTest,
     EmergencyStopInterruptsRunningMachine
 )
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
+    ASSERT_TRUE(
+        controller.start()
+    );
 
-    EXPECT_TRUE(controller.emergencyStop());
+    EXPECT_TRUE(
+        controller.emergencyStop()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::EmergencyStop
+        workcell::MachineState::EmergencyStop
     );
 
     EXPECT_TRUE(
@@ -151,35 +262,49 @@ TEST(
     );
 }
 
-TEST(
+TEST_F(
     MachineControllerTest,
     EmergencyStopCannotResetWhileStillActive
 )
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
-    controller.emergencyStop();
+    ASSERT_TRUE(
+        controller.start()
+    );
 
-    EXPECT_FALSE(controller.reset());
+    ASSERT_TRUE(
+        controller.emergencyStop()
+    );
+
+    EXPECT_FALSE(
+        controller.reset()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::EmergencyStop
+        workcell::MachineState::EmergencyStop
     );
 }
 
-TEST(
+TEST_F(
     MachineControllerTest,
     EmergencyStopCanResetAfterConditionCleared
 )
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
-    controller.emergencyStop();
+    ASSERT_TRUE(
+        controller.start()
+    );
+
+    ASSERT_TRUE(
+        controller.emergencyStop()
+    );
 
     EXPECT_TRUE(
         controller.clearEmergencyStop()
@@ -191,83 +316,290 @@ TEST(
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Idle
+        workcell::MachineState::Idle
     );
 }
 
-TEST(
+TEST_F(
     MachineControllerTest,
-    FaultMovesRunningMachineToFaulted
+    EmergencyStopStopsActiveRobotAndConveyor
 )
 {
-    MachineController controller;
+    ASSERT_TRUE(
+        controller.initialize()
+    );
 
-    controller.initialize();
-    controller.start();
+    ASSERT_TRUE(
+        controller.start()
+    );
+
+    ASSERT_TRUE(
+        conveyor.start()
+    );
+
+    robot.setMotionDuration(
+        500ms
+    );
+
+    ASSERT_TRUE(
+        robot.moveTo(
+            workcell::RobotPosition::Pick
+        )
+    );
+
+    ASSERT_TRUE(
+        robot.isMoving()
+    );
+
+    ASSERT_TRUE(
+        conveyor.isRunning()
+    );
 
     EXPECT_TRUE(
-        controller.triggerFault(
-            workcell::FaultCode::MotionTimeout,
-            "Robot failed to reach position"
-        )
+        controller.emergencyStop()
     );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Faulted
+        workcell::MachineState::EmergencyStop
     );
 
-    EXPECT_TRUE(
-        controller.hasActiveFault()
+    EXPECT_FALSE(
+        robot.isMoving()
+    );
+
+    EXPECT_FALSE(
+        conveyor.isRunning()
     );
 }
 
-TEST(
+TEST_F(
+    MachineControllerTest,
+    SequenceFaultMovesMachineToFaulted
+)
+{
+    ASSERT_TRUE(
+        controller.initialize()
+    );
+
+    ASSERT_TRUE(
+        controller.start()
+    );
+
+    ASSERT_TRUE(
+        conveyor.start()
+    );
+
+    sensor.setActive(true);
+
+    robot.setMotionDuration(
+        500ms
+    );
+
+    sequence.setMotionTimeout(
+        10ms
+    );
+
+    ASSERT_TRUE(
+        sequence.startCycle(true)
+    );
+
+    const auto start =
+        std::chrono::steady_clock::now();
+
+    while (
+        controller.getState()
+        == workcell::MachineState::Running
+    )
+    {
+        controller.update();
+
+        std::this_thread::sleep_for(
+            1ms
+        );
+
+        ASSERT_LT(
+            std::chrono::steady_clock::now()
+                - start,
+            1s
+        );
+    }
+
+    EXPECT_EQ(
+        controller.getState(),
+        workcell::MachineState::Faulted
+    );
+
+    ASSERT_TRUE(
+        controller.hasActiveFault()
+    );
+
+    ASSERT_TRUE(
+        controller.getActiveFault().has_value()
+    );
+
+    EXPECT_EQ(
+        controller.getActiveFault()->code,
+        workcell::FaultCode::MotionTimeout
+    );
+
+    EXPECT_EQ(
+        sequence.getState(),
+        workcell::CycleState::CycleFaulted
+    );
+
+    EXPECT_FALSE(
+        robot.isMoving()
+    );
+
+    EXPECT_FALSE(
+        conveyor.isRunning()
+    );
+}
+
+TEST_F(
     MachineControllerTest,
     FaultedMachineCannotStart
 )
 {
-    MachineController controller;
-
-    controller.initialize();
-    controller.start();
-
-    controller.triggerFault(
-        workcell::FaultCode::MotionTimeout,
-        "Robot motion timeout"
+    ASSERT_TRUE(
+        controller.initialize()
     );
 
-    EXPECT_FALSE(controller.start());
+    ASSERT_TRUE(
+        controller.start()
+    );
+
+    ASSERT_TRUE(
+        conveyor.start()
+    );
+
+    sensor.setActive(true);
+
+    robot.setMotionDuration(
+        500ms
+    );
+
+    sequence.setMotionTimeout(
+        10ms
+    );
+
+    ASSERT_TRUE(
+        sequence.startCycle(true)
+    );
+
+    const auto start =
+        std::chrono::steady_clock::now();
+
+    while (
+        controller.getState()
+        == workcell::MachineState::Running
+    )
+    {
+        controller.update();
+
+        std::this_thread::sleep_for(
+            1ms
+        );
+
+        ASSERT_LT(
+            std::chrono::steady_clock::now()
+                - start,
+            1s
+        );
+    }
+
+    ASSERT_EQ(
+        controller.getState(),
+        workcell::MachineState::Faulted
+    );
+
+    EXPECT_FALSE(
+        controller.start()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Faulted
+        workcell::MachineState::Faulted
     );
 }
 
-TEST(
+TEST_F(
     MachineControllerTest,
     ResetClearsFaultAndReturnsMachineToIdle
 )
 {
-    MachineController controller;
-
-    controller.initialize();
-    controller.start();
-
-    controller.triggerFault(
-        workcell::FaultCode::MotionTimeout,
-        "Robot motion timeout"
+    ASSERT_TRUE(
+        controller.initialize()
     );
 
-    EXPECT_TRUE(controller.reset());
+    ASSERT_TRUE(
+        controller.start()
+    );
+
+    ASSERT_TRUE(
+        conveyor.start()
+    );
+
+    sensor.setActive(true);
+
+    robot.setMotionDuration(
+        500ms
+    );
+
+    sequence.setMotionTimeout(
+        10ms
+    );
+
+    ASSERT_TRUE(
+        sequence.startCycle(true)
+    );
+
+    const auto start =
+        std::chrono::steady_clock::now();
+
+    while (
+        controller.getState()
+        == workcell::MachineState::Running
+    )
+    {
+        controller.update();
+
+        std::this_thread::sleep_for(
+            1ms
+        );
+
+        ASSERT_LT(
+            std::chrono::steady_clock::now()
+                - start,
+            1s
+        );
+    }
+
+    ASSERT_EQ(
+        controller.getState(),
+        workcell::MachineState::Faulted
+    );
+
+    ASSERT_TRUE(
+        controller.hasActiveFault()
+    );
+
+    EXPECT_TRUE(
+        controller.reset()
+    );
 
     EXPECT_EQ(
         controller.getState(),
-        MachineState::Idle
+        workcell::MachineState::Idle
     );
 
     EXPECT_FALSE(
         controller.hasActiveFault()
+    );
+
+    EXPECT_EQ(
+        sequence.getState(),
+        workcell::CycleState::WaitingForPart
     );
 }
