@@ -6,6 +6,9 @@
 #include "simulation/SimPartSensor.hpp"
 #include "simulation/SimRobotArm.hpp"
 
+#include <chrono>
+#include <thread>
+
 using workcell::RobotPosition;
 using workcell::SimConveyor;
 using workcell::SimGripper;
@@ -44,12 +47,26 @@ TEST(SimRobotArmTest, CannotMoveBeforeInitialization)
 
 TEST(SimRobotArmTest, CanMoveAfterInitialization)
 {
-    SimRobotArm robot;
+    using namespace std::chrono_literals;
+
+    SimRobotArm robot(1ms);
 
     robot.initialize();
 
     EXPECT_TRUE(
         robot.moveTo(RobotPosition::Pick)
+    );
+
+    EXPECT_TRUE(
+        robot.isMoving()
+    );
+
+    std::this_thread::sleep_for(2ms);
+
+    robot.update();
+
+    EXPECT_FALSE(
+        robot.isMoving()
     );
 
     EXPECT_EQ(

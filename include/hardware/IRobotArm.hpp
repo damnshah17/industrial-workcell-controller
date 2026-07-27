@@ -11,9 +11,13 @@ public:
 
     virtual bool initialize() = 0;
 
-    virtual bool moveTo(RobotPosition position) = 0;
+    virtual bool moveTo(
+        RobotPosition position
+    ) = 0;
 
     virtual bool stop() = 0;
+
+    virtual void update() = 0;
 
     virtual RobotPosition getPosition() const = 0;
 
@@ -22,4 +26,4 @@ public:
     virtual bool isInitialized() const = 0;
 };
 
-}
+} // namespace workcell
