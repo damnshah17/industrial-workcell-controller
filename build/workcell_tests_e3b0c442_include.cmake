@@ -1,0 +1,5 @@
+if(EXISTS "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/workcell_tests_e3b0c442_tests.cmake")
+  include("C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/workcell_tests_e3b0c442_tests.cmake")
+else()
+  add_test(workcell_tests_NOT_BUILT workcell_tests_NOT_BUILT)
+endif()

@@ -1,0 +1,134 @@
+[
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\MachineState.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\MachineState.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/MachineState.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/MachineState.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\MachineController.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\MachineController.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/MachineController.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/MachineController.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\Command.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\Command.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/Command.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/Command.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\Fault.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\Fault.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/Fault.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/Fault.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\Logger.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\Logger.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/Logger.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/Logger.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\RobotPosition.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\RobotPosition.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/RobotPosition.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/RobotPosition.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\SimRobotArm.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\SimRobotArm.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/SimRobotArm.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/SimRobotArm.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\SimConveyor.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\SimConveyor.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/SimConveyor.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/SimConveyor.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\SimGripper.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\SimGripper.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/SimGripper.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/SimGripper.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\SimPartSensor.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\SimPartSensor.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/SimPartSensor.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/SimPartSensor.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\CycleState.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\CycleState.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/CycleState.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/CycleState.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_controller.dir\\src\\SequenceController.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\src\\SequenceController.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/src/SequenceController.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_controller.dir/src/SequenceController.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\workcell_cli.dir\\apps\\controller_cli.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\apps\\controller_cli.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/apps/controller_cli.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_cli.dir/apps/controller_cli.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -g -std=c++20 -o CMakeFiles\\cycle_demo.dir\\apps\\cycle_demo.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\apps\\cycle_demo.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/apps/cycle_demo.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/cycle_demo.dir/apps/cycle_demo.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -o CMakeFiles\\workcell_tests.dir\\tests\\MachineControllerTests.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\tests\\MachineControllerTests.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/tests/MachineControllerTests.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_tests.dir/tests/MachineControllerTests.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -o CMakeFiles\\workcell_tests.dir\\tests\\CommandTests.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\tests\\CommandTests.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/tests/CommandTests.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_tests.dir/tests/CommandTests.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -o CMakeFiles\\workcell_tests.dir\\tests\\SimHardwareTests.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\tests\\SimHardwareTests.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/tests/SimHardwareTests.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_tests.dir/tests/SimHardwareTests.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -o CMakeFiles\\workcell_tests.dir\\tests\\SequenceControllerTests.cpp.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\tests\\SequenceControllerTests.cpp\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/tests/SequenceControllerTests.cpp",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/CMakeFiles/workcell_tests.dir/tests/SequenceControllerTests.cpp.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googlemock/include\" -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googlemock\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=0 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps\\googletest-build\\googlemock\\CMakeFiles\\gmock.dir\\src\\gmock-all.cc.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\build\\_deps\\googletest-src\\googlemock\\src\\gmock-all.cc\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googlemock/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googlemock\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=0 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps\\googletest-build\\googlemock\\CMakeFiles\\gmock_main.dir\\src\\gmock_main.cc.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\build\\_deps\\googletest-src\\googlemock\\src\\gmock_main.cc\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -I\"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=0 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps\\googletest-build\\googletest\\CMakeFiles\\gtest.dir\\src\\gtest-all.cc.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\build\\_deps\\googletest-src\\googletest\\src\\gtest-all.cc\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.obj"
+},
+{
+  "directory": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/include\" -isystem \"C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest\" -g -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=0 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps\\googletest-build\\googletest\\CMakeFiles\\gtest_main.dir\\src\\gtest_main.cc.obj -c \"C:\\Users\\HP\\Desktop\\New folder\\industrial-workcell-controller\\controller\\build\\_deps\\googletest-src\\googletest\\src\\gtest_main.cc\"",
+  "file": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "output": "C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.obj"
+}
+]

@@ -1,0 +1,33 @@
+# ninja log v7
+96	1882	8068810835680869	CMakeFiles/workcell_controller.dir/src/Fault.cpp.obj	a004d988d3b2c06
+173	2055	8068810836459900	CMakeFiles/workcell_controller.dir/src/SimConveyor.cpp.obj	3d476cc43a273ff8
+47	2223	8068810835182813	CMakeFiles/workcell_controller.dir/src/MachineState.cpp.obj	62432c1f88229519
+155	2238	8068810836281230	CMakeFiles/workcell_controller.dir/src/SimRobotArm.cpp.obj	2145afd314bcdf3b
+135	2259	8068810836079647	CMakeFiles/workcell_controller.dir/src/RobotPosition.cpp.obj	93f7e82686ca8e40
+234	2281	8068810837074289	CMakeFiles/workcell_controller.dir/src/CycleState.cpp.obj	34c4003ecdb78006
+193	2335	8068810836673407	CMakeFiles/workcell_controller.dir/src/SimGripper.cpp.obj	ecdd16a5d7879561
+63	2480	8068810835348967	CMakeFiles/workcell_controller.dir/src/MachineController.cpp.obj	9e69510b0f6c6eaf
+253	2534	8068810837257429	CMakeFiles/workcell_controller.dir/src/SequenceController.cpp.obj	e03836423ef8107
+213	2566	8068810836852191	CMakeFiles/workcell_controller.dir/src/SimPartSensor.cpp.obj	fc8db2bb2776c456
+78	2766	8068810835455392	CMakeFiles/workcell_controller.dir/src/Command.cpp.obj	33462ab9b758eecc
+2223	4544	8068810856952178	CMakeFiles/cycle_demo.dir/apps/cycle_demo.cpp.obj	60693150540f4489
+2058	5515	8068810855331756	CMakeFiles/workcell_cli.dir/apps/controller_cli.cpp.obj	1ba8bbc95a158c0d
+115	7194	8068810835880165	CMakeFiles/workcell_controller.dir/src/Logger.cpp.obj	a2c1c69d518ce134
+7197	7981	8068810906728521	libworkcell_controller.a	f58a52ca70719653
+1987	8211	8068810854631579	_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.obj	58960e136df93e95
+2310	8436	8068810857852457	CMakeFiles/workcell_tests.dir/tests/SimHardwareTests.cpp.obj	4a6f915a2e4ecd64
+2483	8630	8068810859582850	_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.obj	3be14f6463eaf07e
+2240	8689	8068810857132180	CMakeFiles/workcell_tests.dir/tests/MachineControllerTests.cpp.obj	389203bd46de6932
+2260	9178	8068810857322215	CMakeFiles/workcell_tests.dir/tests/CommandTests.cpp.obj	989cf3b418309327
+8042	9183	8068810915144112	cycle_demo.exe	aeb122b6731f5e23
+7982	9221	8068810914543963	workcell_cli.exe	1603138e62d442d0
+2335	9360	8068810858072542	CMakeFiles/workcell_tests.dir/tests/SequenceControllerTests.cpp.obj	c943de5548267725
+274	11010	8068810837466040	_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.obj	d14242101a2ab421
+37	17712	8068810835018070	_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.obj	22a4113acf4845e6
+17715	18065	8068811011873366	lib/libgtest.a	2dcec27ea8478b8d
+18078	18250	8068811015500061	lib/libgtest_main.a	7acfdd8e9515dae0
+18066	18366	8068811015366703	lib/libgmock.a	5b35e7b29991e6d5
+18380	18572	8068811017215296	lib/libgmock_main.a	ae719fb906c32461
+18250	19882	8068811033231117	workcell_tests.exe	7f5fa41016dc89d5
+18250	19882	8068811033231117	workcell_tests_e3b0c442_tests.cmake	7f5fa41016dc89d5
+18250	19882	8068811033231117	C:/Users/HP/Desktop/New folder/industrial-workcell-controller/controller/build/workcell_tests_e3b0c442_tests.cmake	7f5fa41016dc89d5
