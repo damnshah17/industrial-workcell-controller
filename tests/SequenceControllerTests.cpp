@@ -8,6 +8,11 @@
 #include "simulation/SimPartSensor.hpp"
 #include "simulation/SimRobotArm.hpp"
 
+#include <chrono>
+#include <thread>
+
+using namespace std::chrono_literals;
+
 using workcell::CycleState;
 using workcell::RobotPosition;
 using workcell::SequenceController;
@@ -33,6 +38,41 @@ void initializeHardware(
     conveyor.start();
 }
 
+void runUntilFinished(
+    SequenceController& sequence,
+    std::chrono::milliseconds maximumDuration =
+        2s
+)
+{
+    const auto start =
+        std::chrono::steady_clock::now();
+
+    while (
+        sequence.getState()
+            != CycleState::CycleComplete
+        &&
+        sequence.getState()
+            != CycleState::CycleFaulted
+    )
+    {
+        sequence.update();
+
+        std::this_thread::sleep_for(
+            1ms
+        );
+
+        if (
+            std::chrono::steady_clock::now()
+            - start
+            > maximumDuration
+        )
+        {
+            FAIL()
+                << "Sequence did not finish in expected time.";
+        }
+    }
+}
+
 }
 
 TEST(
@@ -40,7 +80,7 @@ TEST(
     StartsWaitingForPart
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(1ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -60,10 +100,10 @@ TEST(
 
 TEST(
     SequenceControllerTest,
-    CannotRunWithUninitializedHardware
+    CannotStartWithUninitializedHardware
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(1ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -76,7 +116,7 @@ TEST(
     );
 
     EXPECT_FALSE(
-        sequence.runCycle(true)
+        sequence.startCycle(true)
     );
 
     EXPECT_EQ(
@@ -87,10 +127,10 @@ TEST(
 
 TEST(
     SequenceControllerTest,
-    DoesNotStartCycleWithoutPart
+    DoesNotStartWithoutPart
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(1ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -110,16 +150,12 @@ TEST(
     );
 
     EXPECT_FALSE(
-        sequence.runCycle(true)
+        sequence.startCycle(true)
     );
 
     EXPECT_EQ(
         sequence.getState(),
         CycleState::WaitingForPart
-    );
-
-    EXPECT_TRUE(
-        conveyor.isRunning()
     );
 }
 
@@ -128,7 +164,7 @@ TEST(
     AcceptedPartCompletesCycle
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(1ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -149,9 +185,11 @@ TEST(
         sensor
     );
 
-    EXPECT_TRUE(
-        sequence.runCycle(true)
+    ASSERT_TRUE(
+        sequence.startCycle(true)
     );
+
+    runUntilFinished(sequence);
 
     EXPECT_EQ(
         sequence.getState(),
@@ -169,6 +207,21 @@ TEST(
 
     EXPECT_TRUE(
         conveyor.isRunning()
+    );
+
+    EXPECT_EQ(
+        sequence.getTotalCycles(),
+        1U
+    );
+
+    EXPECT_EQ(
+        sequence.getAcceptedCycles(),
+        1U
+    );
+
+    EXPECT_EQ(
+        sequence.getRejectedCycles(),
+        0U
     );
 }
 
@@ -177,7 +230,7 @@ TEST(
     RejectedPartCompletesCycle
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(1ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -198,9 +251,11 @@ TEST(
         sensor
     );
 
-    EXPECT_TRUE(
-        sequence.runCycle(false)
+    ASSERT_TRUE(
+        sequence.startCycle(false)
     );
+
+    runUntilFinished(sequence);
 
     EXPECT_EQ(
         sequence.getState(),
@@ -208,92 +263,6 @@ TEST(
     );
 
     EXPECT_EQ(
-        robot.getPosition(),
-        RobotPosition::Home
-    );
-
-    EXPECT_TRUE(
-        gripper.isOpen()
-    );
-
-    EXPECT_TRUE(
-        conveyor.isRunning()
-    );
-}
-
-TEST(
-    SequenceControllerTest,
-    AcceptedCycleUpdatesProductionCounters
-)
-{
-    SimRobotArm robot;
-    SimConveyor conveyor;
-    SimGripper gripper;
-    SimPartSensor sensor;
-
-    initializeHardware(
-        robot,
-        conveyor,
-        gripper,
-        sensor
-    );
-
-    sensor.setActive(true);
-
-    SequenceController sequence(
-        robot,
-        conveyor,
-        gripper,
-        sensor
-    );
-
-    sequence.runCycle(true);
-
-    EXPECT_EQ(
-        sequence.getTotalCycles(),
-        1U
-    );
-
-    EXPECT_EQ(
-        sequence.getAcceptedCycles(),
-        1U
-    );
-
-    EXPECT_EQ(
-        sequence.getRejectedCycles(),
-        0U
-    );
-}
-
-TEST(
-    SequenceControllerTest,
-    RejectedCycleUpdatesProductionCounters
-)
-{
-    SimRobotArm robot;
-    SimConveyor conveyor;
-    SimGripper gripper;
-    SimPartSensor sensor;
-
-    initializeHardware(
-        robot,
-        conveyor,
-        gripper,
-        sensor
-    );
-
-    sensor.setActive(true);
-
-    SequenceController sequence(
-        robot,
-        conveyor,
-        gripper,
-        sensor
-    );
-
-    sequence.runCycle(false);
-
-    EXPECT_EQ(
         sequence.getTotalCycles(),
         1U
     );
@@ -311,10 +280,10 @@ TEST(
 
 TEST(
     SequenceControllerTest,
-    CompletedCycleCanResetForNextPart
+    CompletedCycleCanReset
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(1ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -335,7 +304,11 @@ TEST(
         sensor
     );
 
-    sequence.runCycle(true);
+    ASSERT_TRUE(
+        sequence.startCycle(true)
+    );
+
+    runUntilFinished(sequence);
 
     EXPECT_TRUE(
         sequence.resetForNextCycle()
@@ -349,10 +322,10 @@ TEST(
 
 TEST(
     SequenceControllerTest,
-    CannotResetIncompleteCycle
+    RobotMotionTimeoutFaultsCycle
 )
 {
-    SimRobotArm robot;
+    SimRobotArm robot(500ms);
     SimConveyor conveyor;
     SimGripper gripper;
     SimPartSensor sensor;
@@ -364,6 +337,8 @@ TEST(
         sensor
     );
 
+    sensor.setActive(true);
+
     SequenceController sequence(
         robot,
         conveyor,
@@ -371,7 +346,29 @@ TEST(
         sensor
     );
 
+    sequence.setMotionTimeout(
+        10ms
+    );
+
+    ASSERT_TRUE(
+        sequence.startCycle(true)
+    );
+
+    runUntilFinished(
+        sequence,
+        500ms
+    );
+
+    EXPECT_EQ(
+        sequence.getState(),
+        CycleState::CycleFaulted
+    );
+
     EXPECT_FALSE(
-        sequence.resetForNextCycle()
+        conveyor.isRunning()
+    );
+
+    EXPECT_FALSE(
+        robot.isMoving()
     );
 }

@@ -4,10 +4,14 @@
 
 namespace workcell {
 
-SimRobotArm::SimRobotArm()
+SimRobotArm::SimRobotArm(
+    std::chrono::milliseconds motionDuration
+)
     : initialized_(false),
       moving_(false),
-      position_(RobotPosition::Home)
+      position_(RobotPosition::Home),
+      targetPosition_(RobotPosition::Home),
+      motionDuration_(motionDuration)
 {
 }
 
@@ -15,14 +19,20 @@ bool SimRobotArm::initialize()
 {
     initialized_ = true;
     moving_ = false;
-    position_ = RobotPosition::Home;
 
-    Logger::info("SimRobotArm initialized at Home.");
+    position_ = RobotPosition::Home;
+    targetPosition_ = RobotPosition::Home;
+
+    Logger::info(
+        "SimRobotArm initialized at Home."
+    );
 
     return true;
 }
 
-bool SimRobotArm::moveTo(RobotPosition position)
+bool SimRobotArm::moveTo(
+    RobotPosition position
+)
 {
     if (!initialized_)
     {
@@ -33,25 +43,56 @@ bool SimRobotArm::moveTo(RobotPosition position)
         return false;
     }
 
+    if (moving_)
+    {
+        Logger::warning(
+            "Robot move rejected because another motion is active."
+        );
+
+        return false;
+    }
+
+    targetPosition_ = position;
     moving_ = true;
 
-    Logger::info(
-        "Robot moving from "
-        + toString(position_)
-        + " to "
-        + toString(position)
-    );
-
-    // Phase 2A simulation completes movement immediately.
-    position_ = position;
-    moving_ = false;
+    motionStart_ =
+        std::chrono::steady_clock::now();
 
     Logger::info(
-        "Robot reached "
+        "Robot motion started: "
         + toString(position_)
+        + " -> "
+        + toString(targetPosition_)
     );
 
     return true;
+}
+
+void SimRobotArm::update()
+{
+    if (!moving_)
+    {
+        return;
+    }
+
+    const auto now =
+        std::chrono::steady_clock::now();
+
+    const auto elapsed =
+        std::chrono::duration_cast<
+            std::chrono::milliseconds
+        >(now - motionStart_);
+
+    if (elapsed >= motionDuration_)
+    {
+        position_ = targetPosition_;
+        moving_ = false;
+
+        Logger::info(
+            "Robot reached "
+            + toString(position_)
+        );
+    }
 }
 
 bool SimRobotArm::stop()
@@ -63,7 +104,9 @@ bool SimRobotArm::stop()
 
     moving_ = false;
 
-    Logger::info("Robot stopped.");
+    Logger::info(
+        "Robot motion stopped."
+    );
 
     return true;
 }
@@ -83,4 +126,11 @@ bool SimRobotArm::isInitialized() const
     return initialized_;
 }
 
+void SimRobotArm::setMotionDuration(
+    std::chrono::milliseconds duration
+)
+{
+    motionDuration_ = duration;
 }
+
+} // namespace workcell

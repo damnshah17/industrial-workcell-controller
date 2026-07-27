@@ -6,6 +6,9 @@
 #include "hardware/ISensor.hpp"
 #include "sequence/CycleState.hpp"
 
+#include <chrono>
+#include <optional>
+
 namespace workcell {
 
 class SequenceController
@@ -20,7 +23,11 @@ public:
 
     CycleState getState() const;
 
-    bool runCycle(bool inspectionAccepted);
+    bool startCycle(
+        bool inspectionAccepted
+    );
+
+    void update();
 
     bool resetForNextCycle();
 
@@ -29,6 +36,10 @@ public:
     unsigned int getAcceptedCycles() const;
 
     unsigned int getRejectedCycles() const;
+
+    void setMotionTimeout(
+        std::chrono::milliseconds timeout
+    );
 
 private:
     IRobotArm& robot_;
@@ -42,11 +53,24 @@ private:
     unsigned int acceptedCycles_;
     unsigned int rejectedCycles_;
 
-    void transitionTo(CycleState state);
+    std::optional<bool> inspectionAccepted_;
+
+    std::chrono::milliseconds motionTimeout_;
+
+    std::chrono::steady_clock::time_point
+        stateStartTime_;
+
+    void transitionTo(
+        CycleState state
+    );
 
     bool verifyDevicesReady() const;
 
-    bool failCycle(const char* reason);
+    bool hasStateTimedOut() const;
+
+    void failCycle(
+        const char* reason
+    );
 };
 
 } // namespace workcell

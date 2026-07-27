@@ -1,14 +1,19 @@
+#include "sequence/CycleState.hpp"
 #include "sequence/SequenceController.hpp"
 #include "simulation/SimConveyor.hpp"
 #include "simulation/SimGripper.hpp"
 #include "simulation/SimPartSensor.hpp"
 #include "simulation/SimRobotArm.hpp"
 
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 int main()
 {
-    workcell::SimRobotArm robot;
+    using namespace std::chrono_literals;
+
+    workcell::SimRobotArm robot(500ms);
     workcell::SimConveyor conveyor;
     workcell::SimGripper gripper;
     workcell::SimPartSensor partSensor;
@@ -30,15 +35,39 @@ int main()
     std::cout
         << "\n=== Industrial Workcell Cycle Demo ===\n\n";
 
-    std::cout << "Simulating part arrival...\n";
-
     partSensor.setActive(true);
 
-    std::cout << "\nInspection result: PASS\n\n";
-
-    if (!sequence.runCycle(true))
+    if (!sequence.startCycle(true))
     {
-        std::cout << "Cycle failed.\n";
+        std::cout
+            << "Unable to start cycle.\n";
+
+        return 1;
+    }
+
+    while (
+        sequence.getState()
+            != workcell::CycleState::CycleComplete
+        &&
+        sequence.getState()
+            != workcell::CycleState::CycleFaulted
+    )
+    {
+        sequence.update();
+
+        std::this_thread::sleep_for(
+            50ms
+        );
+    }
+
+    if (
+        sequence.getState()
+        == workcell::CycleState::CycleFaulted
+    )
+    {
+        std::cout
+            << "\nCycle faulted.\n";
+
         return 1;
     }
 
