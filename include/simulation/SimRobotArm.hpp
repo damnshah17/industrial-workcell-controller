@@ -16,9 +16,13 @@ public:
 
     bool initialize() override;
 
-    bool moveTo(RobotPosition position) override;
+    bool moveTo(
+        RobotPosition position
+    ) override;
 
     bool stop() override;
+
+    void update() override;
 
     RobotPosition getPosition() const override;
 
@@ -26,21 +30,30 @@ public:
 
     bool isInitialized() const override;
 
-    void update() override;
-
     void setMotionDuration(
         std::chrono::milliseconds duration
     );
+
+    void setCommunicationFailure(
+        bool enabled
+    );
+
+    bool hasCommunicationFailure() const;
 
 private:
     bool initialized_;
     bool moving_;
 
+    bool communicationFailure_;
+
     RobotPosition position_;
     RobotPosition targetPosition_;
 
-    std::chrono::milliseconds motionDuration_;
-    std::chrono::steady_clock::time_point motionStart_;
+    std::chrono::milliseconds
+        motionDuration_;
+
+    std::chrono::steady_clock::time_point
+        motionStart_;
 };
 
 } // namespace workcell

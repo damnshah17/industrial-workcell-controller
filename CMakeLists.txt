@@ -73,6 +73,16 @@ target_link_libraries(
         workcell_controller
 )
 
+add_executable(
+    integrated_demo
+    apps/integrated_demo.cpp
+)
+
+target_link_libraries(
+    integrated_demo
+    PRIVATE
+        workcell_controller
+)
 # ==========================================
 # Testing
 # ==========================================

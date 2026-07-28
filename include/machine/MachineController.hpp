@@ -1,9 +1,13 @@
 #pragma once
 
+#include "faults/Fault.hpp"
 #include "faults/FaultManager.hpp"
 #include "machine/MachineState.hpp"
 #include "safety/SafetyController.hpp"
 #include "sequence/SequenceController.hpp"
+
+#include <optional>
+#include <string>
 
 namespace workcell {
 
@@ -33,6 +37,11 @@ public:
     bool emergencyStop();
 
     bool clearEmergencyStop();
+
+    bool triggerFault(
+        FaultCode code,
+        const std::string& message
+    );
 
     void update();
 

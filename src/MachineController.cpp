@@ -76,6 +76,16 @@ bool MachineController::start()
 
 bool MachineController::pause()
 {
+    if (
+        currentState_
+        != MachineState::Running
+    )
+    {
+        return false;
+    }
+
+    sequenceController_.pause();
+
     return transitionTo(
         MachineState::Paused
     );
@@ -99,6 +109,21 @@ bool MachineController::resume()
         return false;
     }
 
+    if (
+        currentState_
+        != MachineState::Paused
+    )
+    {
+        return false;
+    }
+
+    if (
+        sequenceController_.isPaused()
+    )
+    {
+        sequenceController_.resume();
+    }
+
     return transitionTo(
         MachineState::Running
     );
@@ -114,6 +139,21 @@ bool MachineController::stop()
     }
 
     sequenceController_.abort();
+
+    if (
+        sequenceController_.getState()
+        == CycleState::CycleAborted
+        ||
+        sequenceController_.getState()
+        == CycleState::CycleComplete
+        ||
+        sequenceController_.getState()
+        == CycleState::CycleFaulted
+    )
+    {
+        sequenceController_
+            .resetForNextCycle();
+    }
 
     Logger::info(
         "Machine stopping."
@@ -334,6 +374,66 @@ bool MachineController::isValidTransition(
     }
 
     return false;
+}
+
+bool MachineController::triggerFault(
+    FaultCode code,
+    const std::string& message
+)
+{
+    if (
+        currentState_
+        == MachineState::EmergencyStop
+    )
+    {
+        Logger::warning(
+            "Fault injection rejected while Emergency Stop is active."
+        );
+
+        return false;
+    }
+
+    if (
+        currentState_
+        == MachineState::Faulted
+    )
+    {
+        Logger::warning(
+            "Fault injection rejected because machine is already faulted."
+        );
+
+        return false;
+    }
+
+    if (
+        !isValidTransition(
+            currentState_,
+            MachineState::Faulted
+        )
+    )
+    {
+        Logger::warning(
+            "Fault injection rejected from current machine state."
+        );
+
+        return false;
+    }
+
+    if (
+        !faultManager_.raiseFault(
+            code,
+            message
+        )
+    )
+    {
+        return false;
+    }
+
+    sequenceController_.abort();
+
+    return transitionTo(
+        MachineState::Faulted
+    );
 }
 
 } // namespace workcell

@@ -19,9 +19,20 @@ public:
 
     bool isInitialized() const override;
 
+    void setOpenFailure(
+        bool enabled
+    );
+
+    void setCloseFailure(
+        bool enabled
+    );
+
 private:
     bool initialized_;
     bool open_;
+
+    bool openFailure_;
+    bool closeFailure_;
 };
 
-}
+} // namespace workcell

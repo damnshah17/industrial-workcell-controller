@@ -195,7 +195,7 @@ int main()
                         : command.argument;
 
                 if (
-                    faultManager.raiseFault(
+                    controller.triggerFault(
                         workcell::FaultCode::MotionTimeout,
                         message
                     )

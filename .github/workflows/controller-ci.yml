@@ -1,0 +1,48 @@
+name: Controller CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test C++ Controller
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+
+      - name: Configure CMake
+        run: |
+          cmake \
+            -S . \
+            -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build controller
+        run: |
+          cmake --build build
+
+      - name: Run tests
+        run: |
+          ctest \
+            --test-dir build \
+            --output-on-failure
+
+      - name: Run integrated workcell demo
+        run: |
+          ./build/integrated_demo
