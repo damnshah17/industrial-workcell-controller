@@ -9,6 +9,7 @@ SimRobotArm::SimRobotArm(
 )
     : initialized_(false),
       moving_(false),
+      communicationFailure_(false),
       position_(RobotPosition::Home),
       targetPosition_(RobotPosition::Home),
       motionDuration_(motionDuration)
@@ -20,8 +21,13 @@ bool SimRobotArm::initialize()
     initialized_ = true;
     moving_ = false;
 
-    position_ = RobotPosition::Home;
-    targetPosition_ = RobotPosition::Home;
+    position_ =
+        RobotPosition::Home;
+
+    targetPosition_ =
+        RobotPosition::Home;
+
+    communicationFailure_ = false;
 
     Logger::info(
         "SimRobotArm initialized at Home."
@@ -38,6 +44,15 @@ bool SimRobotArm::moveTo(
     {
         Logger::error(
             "Robot move rejected because robot is not initialized."
+        );
+
+        return false;
+    }
+
+    if (communicationFailure_)
+    {
+        Logger::error(
+            "Robot move failed because communication failure is active."
         );
 
         return false;
@@ -75,17 +90,34 @@ void SimRobotArm::update()
         return;
     }
 
+    if (communicationFailure_)
+    {
+        Logger::error(
+            "Robot communication lost during motion."
+        );
+
+        moving_ = false;
+
+        return;
+    }
+
     const auto now =
         std::chrono::steady_clock::now();
 
     const auto elapsed =
         std::chrono::duration_cast<
             std::chrono::milliseconds
-        >(now - motionStart_);
+        >(
+            now - motionStart_
+        );
 
-    if (elapsed >= motionDuration_)
+    if (
+        elapsed >= motionDuration_
+    )
     {
-        position_ = targetPosition_;
+        position_ =
+            targetPosition_;
+
         moving_ = false;
 
         Logger::info(
@@ -111,7 +143,8 @@ bool SimRobotArm::stop()
     return true;
 }
 
-RobotPosition SimRobotArm::getPosition() const
+RobotPosition
+SimRobotArm::getPosition() const
 {
     return position_;
 }
@@ -131,6 +164,31 @@ void SimRobotArm::setMotionDuration(
 )
 {
     motionDuration_ = duration;
+}
+
+void SimRobotArm::setCommunicationFailure(
+    bool enabled
+)
+{
+    communicationFailure_ = enabled;
+
+    if (enabled)
+    {
+        Logger::warning(
+            "Simulated robot communication failure enabled."
+        );
+    }
+    else
+    {
+        Logger::info(
+            "Simulated robot communication failure cleared."
+        );
+    }
+}
+
+bool SimRobotArm::hasCommunicationFailure() const
+{
+    return communicationFailure_;
 }
 
 } // namespace workcell

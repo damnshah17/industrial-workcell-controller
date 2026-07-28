@@ -143,3 +143,140 @@ TEST(SimPartSensorTest, CanSimulatePartDetection)
 
     EXPECT_FALSE(sensor.isActive());
 }
+
+TEST(
+    SimRobotArmTest,
+    CommunicationFailureRejectsMotion
+)
+{
+    using namespace std::chrono_literals;
+
+    SimRobotArm robot(10ms);
+
+    ASSERT_TRUE(
+        robot.initialize()
+    );
+
+    robot.setCommunicationFailure(
+        true
+    );
+
+    EXPECT_FALSE(
+        robot.moveTo(
+            RobotPosition::Pick
+        )
+    );
+
+    EXPECT_FALSE(
+        robot.isMoving()
+    );
+
+    EXPECT_EQ(
+        robot.getPosition(),
+        RobotPosition::Home
+    );
+}
+
+TEST(
+    SimConveyorTest,
+    SimulatedStartFailurePreventsStart
+)
+{
+    SimConveyor conveyor;
+
+    ASSERT_TRUE(
+        conveyor.initialize()
+    );
+
+    conveyor.setStartFailure(
+        true
+    );
+
+    EXPECT_FALSE(
+        conveyor.start()
+    );
+
+    EXPECT_FALSE(
+        conveyor.isRunning()
+    );
+}
+
+TEST(
+    SimConveyorTest,
+    SimulatedStopFailurePreventsStop
+)
+{
+    SimConveyor conveyor;
+
+    ASSERT_TRUE(
+        conveyor.initialize()
+    );
+
+    ASSERT_TRUE(
+        conveyor.start()
+    );
+
+    conveyor.setStopFailure(
+        true
+    );
+
+    EXPECT_FALSE(
+        conveyor.stop()
+    );
+
+    EXPECT_TRUE(
+        conveyor.isRunning()
+    );
+}
+
+TEST(
+    SimGripperTest,
+    SimulatedCloseFailurePreventsClose
+)
+{
+    SimGripper gripper;
+
+    ASSERT_TRUE(
+        gripper.initialize()
+    );
+
+    gripper.setCloseFailure(
+        true
+    );
+
+    EXPECT_FALSE(
+        gripper.close()
+    );
+
+    EXPECT_TRUE(
+        gripper.isOpen()
+    );
+}
+
+TEST(
+    SimGripperTest,
+    SimulatedOpenFailurePreventsOpen
+)
+{
+    SimGripper gripper;
+
+    ASSERT_TRUE(
+        gripper.initialize()
+    );
+
+    ASSERT_TRUE(
+        gripper.close()
+    );
+
+    gripper.setOpenFailure(
+        true
+    );
+
+    EXPECT_FALSE(
+        gripper.open()
+    );
+
+    EXPECT_FALSE(
+        gripper.isOpen()
+    );
+}

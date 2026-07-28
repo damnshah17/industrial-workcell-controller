@@ -18,9 +18,12 @@ enum class CycleState
     ReturningHome,
     RestartingConveyor,
     CycleComplete,
-    CycleFaulted
+    CycleFaulted,
+    CycleAborted
 };
 
-std::string toString(CycleState state);
+std::string toString(
+    CycleState state
+);
 
 } // namespace workcell

@@ -26,7 +26,9 @@ SequenceController::SequenceController(
       ),
       stateStartTime_(
           std::chrono::steady_clock::now()
-      )
+      ),
+      paused_(false),
+      pausedAt_(std::nullopt)
 {
 }
 
@@ -88,6 +90,11 @@ bool SequenceController::startCycle(
 
 void SequenceController::update()
 {
+    if (paused_)
+    {
+        return;
+    }
+
     robot_.update();
 
     switch (currentState_)
@@ -464,13 +471,101 @@ void SequenceController::update()
 
         case CycleState::CycleFaulted:
             return;
+
+        case CycleState::CycleAborted:
+            return;
     }
+}
+
+bool SequenceController::pause()
+{
+    if (paused_)
+    {
+        return false;
+    }
+
+    if (
+        currentState_ == CycleState::WaitingForPart
+        ||
+        currentState_ == CycleState::CycleComplete
+        ||
+        currentState_ == CycleState::CycleFaulted
+        ||
+        currentState_ == CycleState::CycleAborted
+    )
+    {
+        return false;
+    }
+
+    paused_ = true;
+
+    pausedAt_ =
+        std::chrono::steady_clock::now();
+
+    Logger::info(
+        "Production sequence paused."
+    );
+
+    return true;
+}
+
+bool SequenceController::resume()
+{
+    if (
+        !paused_
+        ||
+        !pausedAt_.has_value()
+    )
+    {
+        return false;
+    }
+
+    const auto now =
+        std::chrono::steady_clock::now();
+
+    const auto pausedDuration =
+        now - pausedAt_.value();
+
+    stateStartTime_ +=
+        pausedDuration;
+
+    paused_ = false;
+    pausedAt_.reset();
+
+    Logger::info(
+        "Production sequence resumed."
+    );
+
+    return true;
+}
+
+bool SequenceController::isPaused() const
+{
+    return paused_;
 }
 
 void SequenceController::abort()
 {
     robot_.stop();
     conveyor_.stop();
+
+    paused_ = false;
+    pausedAt_.reset();
+
+    if (
+        currentState_ != CycleState::WaitingForPart
+        &&
+        currentState_ != CycleState::CycleComplete
+        &&
+        currentState_ != CycleState::CycleFaulted
+        &&
+        currentState_ != CycleState::CycleAborted
+    )
+    {
+        transitionTo(
+            CycleState::CycleAborted
+        );
+    }
 
     Logger::warning(
         "Production sequence aborted."
@@ -483,6 +578,8 @@ bool SequenceController::resetForNextCycle()
         currentState_ != CycleState::CycleComplete
         &&
         currentState_ != CycleState::CycleFaulted
+        &&
+        currentState_ != CycleState::CycleAborted
     )
     {
         return false;
@@ -490,6 +587,9 @@ bool SequenceController::resetForNextCycle()
 
     inspectionAccepted_.reset();
     fault_.reset();
+
+    paused_ = false;
+    pausedAt_.reset();
 
     transitionTo(
         CycleState::WaitingForPart

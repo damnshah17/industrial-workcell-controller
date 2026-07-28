@@ -1,15 +1,14 @@
 #pragma once
 
+#include "faults/Fault.hpp"
 #include "hardware/IConveyor.hpp"
 #include "hardware/IGripper.hpp"
 #include "hardware/IRobotArm.hpp"
 #include "hardware/ISensor.hpp"
 #include "sequence/CycleState.hpp"
-#include "faults/Fault.hpp"
 
 #include <chrono>
 #include <optional>
-
 
 namespace workcell {
 
@@ -31,16 +30,20 @@ public:
 
     void update();
 
+    bool pause();
+    bool resume();
+
     void abort();
 
     bool resetForNextCycle();
 
-    const std::optional<Fault>& getFault() const;
+    bool isPaused() const;
+
+    const std::optional<Fault>&
+    getFault() const;
 
     unsigned int getTotalCycles() const;
-
     unsigned int getAcceptedCycles() const;
-
     unsigned int getRejectedCycles() const;
 
     void setMotionTimeout(
@@ -59,14 +62,19 @@ private:
     unsigned int acceptedCycles_;
     unsigned int rejectedCycles_;
 
-    std::optional<Fault> fault_;
-
     std::optional<bool> inspectionAccepted_;
+    std::optional<Fault> fault_;
 
     std::chrono::milliseconds motionTimeout_;
 
     std::chrono::steady_clock::time_point
         stateStartTime_;
+
+    bool paused_;
+
+    std::optional<
+        std::chrono::steady_clock::time_point
+    > pausedAt_;
 
     void transitionTo(
         CycleState state

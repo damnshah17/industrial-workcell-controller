@@ -2,7 +2,9 @@
 
 namespace workcell {
 
-std::string toString(CycleState state)
+std::string toString(
+    CycleState state
+)
 {
     switch (state)
     {
@@ -44,6 +46,9 @@ std::string toString(CycleState state)
 
         case CycleState::CycleFaulted:
             return "CycleFaulted";
+
+        case CycleState::CycleAborted:
+            return "CycleAborted";
     }
 
     return "Unknown";
