@@ -83,6 +83,17 @@ target_link_libraries(
     PRIVATE
         workcell_controller
 )
+
+add_executable(
+    machine_bridge
+    apps/machine_bridge.cpp
+)
+
+target_link_libraries(
+    machine_bridge
+    PRIVATE
+        workcell_controller
+)
 # ==========================================
 # Testing
 # ==========================================

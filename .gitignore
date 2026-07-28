@@ -1,9 +1,21 @@
-build/
-out/
-cmake-build-*/
+# ========================================
+# C++ / CMake
+# ========================================
 
-.vs/
-.vscode/
+build/
+**/build/
+
+out/
+**/out/
+
+cmake-build-*/
+**/cmake-build-*/
+
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+cmake_install.cmake
+compile_commands.json
 
 *.exe
 *.obj
@@ -13,12 +25,34 @@ cmake-build-*/
 *.dll
 *.pdb
 
-CMakeCache.txt
-CMakeFiles/
-CTestTestfile.cmake
-cmake_install.cmake
-compile_commands.json
+# ========================================
+# .NET
+# ========================================
+
+bin/
+obj/
+
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ========================================
+# Visual Studio / VS Code
+# ========================================
+
+.vs/
+.vscode/
+
+# ========================================
+# Logs
+# ========================================
 
 *.log
+
+# ========================================
+# OS
+# ========================================
+
 .DS_Store
 Thumbs.db
