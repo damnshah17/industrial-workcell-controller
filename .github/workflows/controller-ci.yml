@@ -1,4 +1,4 @@
-name: Controller CI
+name: Workcell CI
 
 on:
   push:
@@ -11,16 +11,16 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    name: Build and Test C++ Controller
+  cpp:
+    name: C++ Controller
 
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@7
 
-      - name: Install dependencies
+      - name: Install Ninja
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build
@@ -37,12 +37,44 @@ jobs:
         run: |
           cmake --build controller/build
 
-      - name: Run tests
+      - name: Run C++ tests
         run: |
           ctest \
             --test-dir controller/build \
             --output-on-failure
 
-      - name: Run integrated workcell demo
+      - name: Run integrated controller demo
         run: |
           ./controller/build/integrated_demo
+
+  dotnet:
+    name: ASP.NET Service
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: |
+          dotnet restore service/WorkcellService.slnx
+
+      - name: Build service
+        run: |
+          dotnet build \
+            service/WorkcellService.slnx \
+            --no-restore \
+            --configuration Release
+
+      - name: Run .NET tests
+        run: |
+          dotnet test \
+            service/WorkcellService.slnx \
+            --no-build \
+            --configuration Release
