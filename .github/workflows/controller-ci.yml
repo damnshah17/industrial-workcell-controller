@@ -28,21 +28,21 @@ jobs:
       - name: Configure CMake
         run: |
           cmake \
-            -S . \
-            -B build \
+            -S controller \
+            -B controller/build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build controller
         run: |
-          cmake --build build
+          cmake --build controller/build
 
       - name: Run tests
         run: |
           ctest \
-            --test-dir build \
+            --test-dir controller/build \
             --output-on-failure
 
       - name: Run integrated workcell demo
         run: |
-          ./build/integrated_demo
+          ./controller/build/integrated_demo
