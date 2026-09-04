@@ -56,3 +56,7 @@ obj/
 
 .DS_Store
 Thumbs.db
+
+# Local environment and database data
+.env
+postgres-data/
