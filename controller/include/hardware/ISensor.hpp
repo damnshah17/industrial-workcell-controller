@@ -12,6 +12,8 @@ public:
     virtual bool isActive() const = 0;
 
     virtual bool isInitialized() const = 0;
+
+    virtual bool isHealthy() const = 0;
 };
 
 }

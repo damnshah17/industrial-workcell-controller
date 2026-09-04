@@ -212,6 +212,66 @@ int main()
         faultManager
     );
 
+    auto configureSimulationFault =
+        [&](const std::string& fault, bool enabled)
+        {
+            if (fault == "robot-communication")
+            {
+                robot.setCommunicationFailure(enabled);
+            }
+            else if (fault == "motion-timeout")
+            {
+                robot.setMotionStalled(enabled);
+                sequence.setMotionTimeout(
+                    enabled
+                        ? std::chrono::milliseconds(200)
+                        : std::chrono::milliseconds(3000)
+                );
+            }
+            else if (fault == "conveyor-start")
+            {
+                conveyor.setStartFailure(enabled);
+            }
+            else if (fault == "conveyor-stop")
+            {
+                conveyor.setStopFailure(enabled);
+            }
+            else if (fault == "gripper-open")
+            {
+                gripper.setOpenFailure(enabled);
+            }
+            else if (fault == "gripper-close")
+            {
+                gripper.setCloseFailure(enabled);
+            }
+            else if (fault == "sensor")
+            {
+                sensor.setFailure(enabled);
+            }
+            else if (fault == "safety-door")
+            {
+                safety.setSafetyDoorOpen(enabled);
+            }
+            else
+            {
+                return false;
+            }
+
+            return true;
+        };
+
+    auto clearAllSimulationFaults = [&]
+        {
+            configureSimulationFault("robot-communication", false);
+            configureSimulationFault("motion-timeout", false);
+            configureSimulationFault("conveyor-start", false);
+            configureSimulationFault("conveyor-stop", false);
+            configureSimulationFault("gripper-open", false);
+            configureSimulationFault("gripper-close", false);
+            configureSimulationFault("sensor", false);
+            configureSimulationFault("safety-door", false);
+        };
+
     std::mutex queueMutex;
     std::condition_variable queueChanged;
     std::queue<std::function<void()>> commands;
@@ -321,6 +381,40 @@ int main()
                             success = machine.triggerFault(
                                 workcell::FaultCode::MotionTimeout,
                                 "Injected motion timeout"
+                            );
+                        }
+                        else if (command == "simulation-faults-clear")
+                        {
+                            clearAllSimulationFaults();
+                            success = true;
+                        }
+                        else if (
+                            command.starts_with("simulation-fault-")
+                        )
+                        {
+                            constexpr const char* prefix =
+                                "simulation-fault-";
+                            const auto clearSuffix =
+                                std::string("-clear");
+                            auto fault = command.substr(
+                                std::char_traits<char>::length(prefix)
+                            );
+                            bool enabled = true;
+
+                            if (
+                                fault.size() > clearSuffix.size()
+                                && fault.ends_with(clearSuffix)
+                            )
+                            {
+                                enabled = false;
+                                fault.erase(
+                                    fault.size() - clearSuffix.size()
+                                );
+                            }
+
+                            success = configureSimulationFault(
+                                fault,
+                                enabled
                             );
                         }
                         else if (

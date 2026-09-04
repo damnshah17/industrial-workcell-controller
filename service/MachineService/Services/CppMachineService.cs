@@ -155,7 +155,7 @@ public sealed class CppMachineService :
         return response.Success;
     }
 
-    private static MachineStatus ToStatus(
+    internal static MachineStatus ToStatus(
         ControllerResponse response
     )
     {

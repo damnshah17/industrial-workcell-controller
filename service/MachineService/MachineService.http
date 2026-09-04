@@ -27,3 +27,15 @@ GET {{MachineService_HostAddress}}/api/faults?page=1&pageSize=25
 ###
 
 GET {{MachineService_HostAddress}}/api/metrics
+
+###
+
+POST {{MachineService_HostAddress}}/api/simulation/faults/robot-communication
+
+###
+
+POST {{MachineService_HostAddress}}/api/simulation/faults/robot-communication/clear
+
+###
+
+POST {{MachineService_HostAddress}}/api/simulation/faults/clear
