@@ -162,4 +162,17 @@ if(BUILD_TESTING)
         PROPERTIES TIMEOUT 15
     )
 
+    add_test(
+        NAME MachineBridgeFaultIntegration
+        COMMAND
+            ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_fault_integration.py
+            $<TARGET_FILE:machine_bridge>
+    )
+
+    set_tests_properties(
+        MachineBridgeFaultIntegration
+        PROPERTIES TIMEOUT 30
+    )
+
 endif()

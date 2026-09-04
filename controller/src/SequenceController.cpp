@@ -41,6 +41,16 @@ bool SequenceController::startCycle(
     bool inspectionAccepted
 )
 {
+    if (!partSensor_.isHealthy())
+    {
+        failCycle(
+            FaultCode::SensorFailure,
+            "Cannot start cycle because the part sensor has failed."
+        );
+
+        return false;
+    }
+
     if (!verifyDevicesReady())
     {
         failCycle(

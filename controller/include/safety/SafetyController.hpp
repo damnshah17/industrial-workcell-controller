@@ -19,11 +19,16 @@ public:
 
     bool isEmergencyStopActive() const;
 
+    void setSafetyDoorOpen(bool open);
+
+    bool isSafetyDoorOpen() const;
+
 private:
     IRobotArm& robot_;
     IConveyor& conveyor_;
 
     bool emergencyStopActive_;
+    bool safetyDoorOpen_;
 };
 
 } // namespace workcell

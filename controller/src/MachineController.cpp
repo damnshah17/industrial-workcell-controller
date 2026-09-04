@@ -45,6 +45,15 @@ bool MachineController::initialize()
 
 bool MachineController::start()
 {
+    if (safetyController_.isSafetyDoorOpen())
+    {
+        Logger::safety(
+            "Start rejected because the safety door is open."
+        );
+
+        return false;
+    }
+
     if (
         safetyController_
             .isEmergencyStopActive()
@@ -265,6 +274,16 @@ void MachineController::update()
         != MachineState::Running
     )
     {
+        return;
+    }
+
+    if (safetyController_.isSafetyDoorOpen())
+    {
+        triggerFault(
+            FaultCode::SafetyDoorOpen,
+            "Safety door opened while the machine was running."
+        );
+
         return;
     }
 

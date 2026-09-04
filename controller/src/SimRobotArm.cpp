@@ -10,6 +10,7 @@ SimRobotArm::SimRobotArm(
     : initialized_(false),
       moving_(false),
       communicationFailure_(false),
+      motionStalled_(false),
       position_(RobotPosition::Home),
       targetPosition_(RobotPosition::Home),
       motionDuration_(motionDuration)
@@ -28,6 +29,7 @@ bool SimRobotArm::initialize()
         RobotPosition::Home;
 
     communicationFailure_ = false;
+    motionStalled_ = false;
 
     Logger::info(
         "SimRobotArm initialized at Home."
@@ -86,6 +88,11 @@ bool SimRobotArm::moveTo(
 void SimRobotArm::update()
 {
     if (!moving_)
+    {
+        return;
+    }
+
+    if (motionStalled_)
     {
         return;
     }
@@ -189,6 +196,22 @@ void SimRobotArm::setCommunicationFailure(
 bool SimRobotArm::hasCommunicationFailure() const
 {
     return communicationFailure_;
+}
+
+void SimRobotArm::setMotionStalled(bool enabled)
+{
+    motionStalled_ = enabled;
+
+    Logger::warning(
+        enabled
+            ? "Simulated robot motion stall enabled."
+            : "Simulated robot motion stall cleared."
+    );
+}
+
+bool SimRobotArm::isMotionStalled() const
+{
+    return motionStalled_;
 }
 
 } // namespace workcell

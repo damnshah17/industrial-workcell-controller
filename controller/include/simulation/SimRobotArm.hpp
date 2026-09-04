@@ -40,11 +40,16 @@ public:
 
     bool hasCommunicationFailure() const;
 
+    void setMotionStalled(bool enabled);
+
+    bool isMotionStalled() const;
+
 private:
     bool initialized_;
     bool moving_;
 
     bool communicationFailure_;
+    bool motionStalled_;
 
     RobotPosition position_;
     RobotPosition targetPosition_;

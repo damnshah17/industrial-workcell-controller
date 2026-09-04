@@ -372,3 +372,22 @@ TEST(
         robot.isMoving()
     );
 }
+
+TEST(SequenceControllerTest, SensorFailureUsesSensorFaultPath)
+{
+    SimRobotArm robot(1ms);
+    SimConveyor conveyor;
+    SimGripper gripper;
+    SimPartSensor sensor;
+    initializeHardware(robot, conveyor, gripper, sensor);
+    sensor.setActive(true);
+    sensor.setFailure(true);
+    SequenceController sequence(robot, conveyor, gripper, sensor);
+
+    EXPECT_FALSE(sequence.startCycle(true));
+    ASSERT_TRUE(sequence.getFault().has_value());
+    EXPECT_EQ(
+        sequence.getFault()->code,
+        workcell::FaultCode::SensorFailure
+    );
+}

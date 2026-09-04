@@ -41,6 +41,7 @@ builder.Services.AddSingleton<IHistoryWriteQueue>(
 );
 builder.Services.AddSingleton<IMachineService, PersistentMachineService>();
 builder.Services.AddSingleton<IHistoryService, HistoryService>();
+builder.Services.AddSingleton<ISimulationService, CppSimulationService>();
 builder.Services.AddHostedService<HistoryWriterService>();
 builder.Services.AddHostedService<ControllerHistoryObserver>();
 

@@ -1078,3 +1078,28 @@ TEST_F(
     EXPECT_TRUE(controller.startProductionCycle(false));
     EXPECT_EQ(sequence.getTotalCycles(), 1U);
 }
+
+TEST_F(MachineControllerTest, SafetyDoorFaultsRunningMachineNaturally)
+{
+    ASSERT_TRUE(controller.initialize());
+    ASSERT_TRUE(controller.start());
+    safety.setSafetyDoorOpen(true);
+
+    controller.update();
+
+    EXPECT_EQ(controller.getState(), workcell::MachineState::Faulted);
+    ASSERT_TRUE(controller.getActiveFault().has_value());
+    EXPECT_EQ(
+        controller.getActiveFault()->code,
+        workcell::FaultCode::SafetyDoorOpen
+    );
+}
+
+TEST_F(MachineControllerTest, SafetyDoorMustCloseBeforeRestart)
+{
+    ASSERT_TRUE(controller.initialize());
+    safety.setSafetyDoorOpen(true);
+    EXPECT_FALSE(controller.start());
+    safety.setSafetyDoorOpen(false);
+    EXPECT_TRUE(controller.start());
+}

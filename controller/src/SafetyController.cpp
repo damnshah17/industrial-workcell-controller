@@ -10,7 +10,8 @@ SafetyController::SafetyController(
 )
     : robot_(robot),
       conveyor_(conveyor),
-      emergencyStopActive_(false)
+      emergencyStopActive_(false),
+      safetyDoorOpen_(false)
 {
 }
 
@@ -64,6 +65,22 @@ bool SafetyController::clearEmergencyStop()
 bool SafetyController::isEmergencyStopActive() const
 {
     return emergencyStopActive_;
+}
+
+void SafetyController::setSafetyDoorOpen(bool open)
+{
+    safetyDoorOpen_ = open;
+
+    Logger::safety(
+        open
+            ? "Safety door opened."
+            : "Safety door closed."
+    );
+}
+
+bool SafetyController::isSafetyDoorOpen() const
+{
+    return safetyDoorOpen_;
 }
 
 } // namespace workcell

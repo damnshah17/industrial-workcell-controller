@@ -280,3 +280,33 @@ TEST(
         gripper.isOpen()
     );
 }
+
+TEST(SimRobotArmTest, MotionStallKeepsActiveMotionIncomplete)
+{
+    using namespace std::chrono_literals;
+    SimRobotArm robot(1ms);
+    ASSERT_TRUE(robot.initialize());
+    robot.setMotionStalled(true);
+    ASSERT_TRUE(robot.moveTo(RobotPosition::Pick));
+
+    std::this_thread::sleep_for(2ms);
+    robot.update();
+
+    EXPECT_TRUE(robot.isMoving());
+    EXPECT_EQ(robot.getPosition(), RobotPosition::Home);
+}
+
+TEST(SimPartSensorTest, FailureMakesSensorUnhealthyAndInactive)
+{
+    SimPartSensor sensor;
+    ASSERT_TRUE(sensor.initialize());
+    sensor.setActive(true);
+    sensor.setFailure(true);
+
+    EXPECT_FALSE(sensor.isHealthy());
+    EXPECT_FALSE(sensor.isActive());
+
+    sensor.setFailure(false);
+    EXPECT_TRUE(sensor.isHealthy());
+    EXPECT_TRUE(sensor.isActive());
+}
