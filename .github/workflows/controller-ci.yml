@@ -52,6 +52,25 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: workcell_test
+          POSTGRES_USER: workcell
+          POSTGRES_PASSWORD: ci-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U workcell -d workcell_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      ConnectionStrings__WorkcellDatabase: Host=localhost;Port=5432;Database=workcell_test;Username=workcell;Password=ci-test-only
+      WORKCELL_TEST_CONNECTION_STRING: Host=localhost;Port=5432;Database=workcell_test;Username=workcell;Password=ci-test-only
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -76,5 +95,13 @@ jobs:
         run: |
           dotnet test \
             service/WorkcellService.slnx \
+            --no-build \
+            --configuration Release
+
+      - name: Apply database migrations
+        run: |
+          dotnet tool restore
+          dotnet tool run dotnet-ef database update \
+            --project service/MachineService/MachineService.csproj \
             --no-build \
             --configuration Release

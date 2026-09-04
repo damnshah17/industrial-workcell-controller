@@ -13,3 +13,17 @@ GET {{MachineService_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+GET {{MachineService_HostAddress}}/api/events?page=1&pageSize=25
+
+###
+
+GET {{MachineService_HostAddress}}/api/cycles?page=1&pageSize=25
+
+###
+
+GET {{MachineService_HostAddress}}/api/faults?page=1&pageSize=25
+
+###
+
+GET {{MachineService_HostAddress}}/api/metrics
