@@ -19,5 +19,17 @@ public sealed record ControllerResponse(
     FaultInfo? Fault,
 
     [property: JsonPropertyName("cycle")]
-    CycleStatus Cycle
+    CycleStatus Cycle,
+
+    [property: JsonPropertyName("robot")]
+    RobotStatus Robot,
+
+    [property: JsonPropertyName("conveyor")]
+    ConveyorStatus Conveyor,
+
+    [property: JsonPropertyName("gripper")]
+    GripperStatus Gripper,
+
+    [property: JsonPropertyName("partSensor")]
+    PartSensorStatus PartSensor
 );

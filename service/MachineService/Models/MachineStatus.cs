@@ -4,5 +4,9 @@ public sealed record MachineStatus(
     MachineState State,
     bool EmergencyStopActive,
     FaultInfo? ActiveFault,
-    CycleStatus Cycle
+    CycleStatus Cycle,
+    RobotStatus Robot,
+    ConveyorStatus Conveyor,
+    GripperStatus Gripper,
+    PartSensorStatus PartSensor
 );

@@ -26,6 +26,10 @@ public:
 
     bool start();
 
+    bool startProductionCycle(
+        bool inspectionAccepted
+    );
+
     bool pause();
 
     bool resume();

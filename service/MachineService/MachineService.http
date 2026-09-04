@@ -1,5 +1,14 @@
 @MachineService_HostAddress = http://localhost:5295
 
+###
+
+POST {{MachineService_HostAddress}}/api/machine/cycle
+Content-Type: application/json
+
+{
+  "inspectionAccepted": true
+}
+
 GET {{MachineService_HostAddress}}/weatherforecast/
 Accept: application/json
 

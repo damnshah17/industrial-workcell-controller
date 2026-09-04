@@ -1012,3 +1012,69 @@ TEST_F(
         workcell::FaultCode::GripperFailure
     );
 }
+
+TEST_F(
+    MachineControllerTest,
+    ProductionCycleRequiresRunningMachine
+)
+{
+    sensor.setActive(true);
+
+    EXPECT_FALSE(
+        controller.startProductionCycle(true)
+    );
+
+    ASSERT_TRUE(controller.initialize());
+
+    EXPECT_FALSE(
+        controller.startProductionCycle(true)
+    );
+}
+
+TEST_F(
+    MachineControllerTest,
+    RunningMachineStartsOnlyOneProductionCycle
+)
+{
+    ASSERT_TRUE(controller.initialize());
+    ASSERT_TRUE(controller.start());
+    ASSERT_TRUE(conveyor.start());
+    sensor.setActive(true);
+
+    EXPECT_TRUE(
+        controller.startProductionCycle(true)
+    );
+
+    EXPECT_FALSE(
+        controller.startProductionCycle(false)
+    );
+}
+
+TEST_F(
+    MachineControllerTest,
+    CompletedProductionCycleCanStartAgain
+)
+{
+    robot.setMotionDuration(1ms);
+    ASSERT_TRUE(controller.initialize());
+    ASSERT_TRUE(controller.start());
+    ASSERT_TRUE(conveyor.start());
+    sensor.setActive(true);
+    ASSERT_TRUE(controller.startProductionCycle(true));
+
+    const auto deadline =
+        std::chrono::steady_clock::now() + 2s;
+
+    while (
+        sequence.getState()
+            != workcell::CycleState::CycleComplete
+    )
+    {
+        controller.update();
+        std::this_thread::sleep_for(1ms);
+        ASSERT_LT(std::chrono::steady_clock::now(), deadline);
+    }
+
+    EXPECT_TRUE(controller.startProductionCycle(false));
+    EXPECT_EQ(sequence.getTotalCycles(), 1U);
+}

@@ -94,6 +94,14 @@ target_link_libraries(
     PRIVATE
         workcell_controller
 )
+
+if(UNIX)
+    target_link_libraries(
+        machine_bridge
+        PRIVATE
+            pthread
+    )
+endif()
 # ==========================================
 # Testing
 # ==========================================
@@ -101,6 +109,8 @@ target_link_libraries(
 include(CTest)
 
 if(BUILD_TESTING)
+
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
     include(FetchContent)
 
@@ -138,5 +148,18 @@ if(BUILD_TESTING)
     include(GoogleTest)
 
     gtest_discover_tests(workcell_tests)
+
+    add_test(
+        NAME MachineBridgeIntegration
+        COMMAND
+            ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_integration.py
+            $<TARGET_FILE:machine_bridge>
+    )
+
+    set_tests_properties(
+        MachineBridgeIntegration
+        PROPERTIES TIMEOUT 15
+    )
 
 endif()

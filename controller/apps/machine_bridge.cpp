@@ -9,7 +9,15 @@
 #include "simulation/SimRobotArm.hpp"
 
 #include <iostream>
+#include <condition_variable>
+#include <functional>
+#include <future>
+#include <iomanip>
+#include <mutex>
+#include <queue>
+#include <sstream>
 #include <string>
+#include <thread>
 
 namespace {
 
@@ -47,7 +55,26 @@ std::string escapeJson(
             break;
 
         default:
-            result += character;
+            if (
+                static_cast<unsigned char>(character)
+                < 0x20
+            )
+            {
+                std::ostringstream escaped;
+                escaped
+                    << "\\u"
+                    << std::hex
+                    << std::setw(4)
+                    << std::setfill('0')
+                    << static_cast<int>(
+                        static_cast<unsigned char>(character)
+                    );
+                result += escaped.str();
+            }
+            else
+            {
+                result += character;
+            }
             break;
         }
     }
@@ -55,13 +82,19 @@ std::string escapeJson(
     return result;
 }
 
-void sendResponse(
+std::string makeResponse(
     bool success,
     const workcell::MachineController& machine,
-    const workcell::SequenceController& sequence
+    const workcell::SequenceController& sequence,
+    const workcell::SimRobotArm& robot,
+    const workcell::SimConveyor& conveyor,
+    const workcell::SimGripper& gripper,
+    const workcell::SimPartSensor& sensor
 )
 {
-    std::cout
+    std::ostringstream output;
+
+    output
         << RESPONSE_PREFIX
         << "{"
         << "\"success\":"
@@ -89,7 +122,7 @@ void sendResponse(
         const auto& fault =
             machine.getActiveFault().value();
 
-        std::cout
+        output
             << ","
             << "\"fault\":{"
             << "\"code\":\""
@@ -102,11 +135,11 @@ void sendResponse(
     }
     else
     {
-        std::cout
+        output
             << ",\"fault\":null";
     }
 
-    std::cout
+    output
         << ","
         << "\"cycle\":{"
         << "\"state\":\""
@@ -122,9 +155,27 @@ void sendResponse(
         << ","
         << "\"rejected\":"
         << sequence.getRejectedCycles()
+        << "},"
+        << "\"robot\":{"
+        << "\"position\":\""
+        << workcell::toString(robot.getPosition())
+        << "\",\"moving\":"
+        << (robot.isMoving() ? "true" : "false")
+        << ",\"initialized\":"
+        << (robot.isInitialized() ? "true" : "false")
+        << "},"
+        << "\"conveyor\":{\"running\":"
+        << (conveyor.isRunning() ? "true" : "false")
+        << "},"
+        << "\"gripper\":{\"open\":"
+        << (gripper.isOpen() ? "true" : "false")
+        << "},"
+        << "\"partSensor\":{\"active\":"
+        << (sensor.isActive() ? "true" : "false")
         << "}"
-        << "}"
-        << std::endl;
+        << "}";
+
+    return output.str();
 }
 
 } // namespace
@@ -161,87 +212,180 @@ int main()
         faultManager
     );
 
+    std::mutex queueMutex;
+    std::condition_variable queueChanged;
+    std::queue<std::function<void()>> commands;
+    bool shuttingDown = false;
+
+    std::thread controllerThread(
+        [&]
+        {
+            using namespace std::chrono_literals;
+
+            while (true)
+            {
+                std::queue<std::function<void()>> pending;
+
+                {
+                    std::unique_lock lock(queueMutex);
+                    queueChanged.wait_for(
+                        lock,
+                        10ms,
+                        [&]
+                        {
+                            return shuttingDown
+                                || !commands.empty();
+                        }
+                    );
+
+                    pending.swap(commands);
+
+                    if (shuttingDown && pending.empty())
+                    {
+                        break;
+                    }
+                }
+
+                while (!pending.empty())
+                {
+                    pending.front()();
+                    pending.pop();
+                }
+
+                machine.update();
+
+                if (
+                    sequence.getState()
+                        == workcell::CycleState::CycleComplete
+                    && sensor.isActive()
+                )
+                {
+                    sensor.setActive(false);
+                }
+            }
+        }
+    );
+
+    auto submit =
+        [&](std::string command)
+        {
+            auto response =
+                std::make_shared<std::promise<void>>();
+            auto result = response->get_future();
+
+            {
+                std::lock_guard lock(queueMutex);
+                commands.push(
+                    [&, command = std::move(command), response]
+                    {
+                        bool success = false;
+
+                        if (command == "status")
+                        {
+                            success = true;
+                        }
+                        else if (command == "initialize")
+                        {
+                            success = machine.initialize();
+                        }
+                        else if (command == "start")
+                        {
+                            success = machine.start();
+                        }
+                        else if (command == "pause")
+                        {
+                            success = machine.pause();
+                        }
+                        else if (command == "resume")
+                        {
+                            success = machine.resume();
+                        }
+                        else if (command == "stop")
+                        {
+                            success = machine.stop();
+                        }
+                        else if (command == "reset")
+                        {
+                            success = machine.reset();
+                        }
+                        else if (command == "estop")
+                        {
+                            success = machine.emergencyStop();
+                        }
+                        else if (command == "clear-estop")
+                        {
+                            success = machine.clearEmergencyStop();
+                        }
+                        else if (command == "fault-motion-timeout")
+                        {
+                            success = machine.triggerFault(
+                                workcell::FaultCode::MotionTimeout,
+                                "Injected motion timeout"
+                            );
+                        }
+                        else if (
+                            command == "cycle-accepted"
+                            || command == "cycle-rejected"
+                        )
+                        {
+                            if (
+                                machine.getState()
+                                == workcell::MachineState::Running
+                            )
+                            {
+                                sensor.setActive(true);
+                                success = machine.startProductionCycle(
+                                    command == "cycle-accepted"
+                                );
+
+                                if (!success)
+                                {
+                                    sensor.setActive(false);
+                                }
+                            }
+                        }
+
+                        std::cout
+                            << makeResponse(
+                                success,
+                                machine,
+                                sequence,
+                                robot,
+                                conveyor,
+                                gripper,
+                                sensor
+                            )
+                            << std::endl;
+
+                        response->set_value();
+                    }
+                );
+            }
+
+            queueChanged.notify_one();
+            result.get();
+        };
+
     std::string command;
 
     while (std::getline(std::cin, command))
     {
-        bool success = false;
-
-        if (command == "status")
+        if (command == "exit")
         {
-            success = true;
-        }
-        else if (command == "initialize")
-        {
-            success =
-                machine.initialize();
-        }
-        else if (command == "start")
-        {
-            success =
-                machine.start();
-        }
-        else if (command == "pause")
-        {
-            success =
-                machine.pause();
-        }
-        else if (command == "resume")
-        {
-            success =
-                machine.resume();
-        }
-        else if (command == "stop")
-        {
-            success =
-                machine.stop();
-        }
-        else if (command == "reset")
-        {
-            success =
-                machine.reset();
-        }
-        else if (command == "estop")
-        {
-            success =
-                machine.emergencyStop();
-        }
-        else if (command == "clear-estop")
-        {
-            success =
-                machine.clearEmergencyStop();
-        }
-        else if (command == "fault-motion-timeout")
-        {
-            success =
-                machine.triggerFault(
-                    workcell::FaultCode::MotionTimeout,
-                    "Injected motion timeout"
-                );
-        }
-        else if (command == "exit")
-        {
-            sendResponse(
-                true,
-                machine,
-                sequence
-            );
-
+            submit("status");
             break;
         }
-        else
-        {
-            success = false;
-        }
 
-        machine.update();
-
-        sendResponse(
-            success,
-            machine,
-            sequence
-        );
+        submit(command);
     }
+
+    {
+        std::lock_guard lock(queueMutex);
+        shuttingDown = true;
+    }
+
+    queueChanged.notify_one();
+    controllerThread.join();
 
     return 0;
 }

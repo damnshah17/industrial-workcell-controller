@@ -74,6 +74,32 @@ bool MachineController::start()
     );
 }
 
+bool MachineController::startProductionCycle(
+    bool inspectionAccepted
+)
+{
+    if (currentState_ != MachineState::Running)
+    {
+        Logger::warning(
+            "Cycle start rejected because machine is not Running."
+        );
+
+        return false;
+    }
+
+    if (
+        sequenceController_.getState()
+        == CycleState::CycleComplete
+    )
+    {
+        sequenceController_.resetForNextCycle();
+    }
+
+    return sequenceController_.startCycle(
+        inspectionAccepted
+    );
+}
+
 bool MachineController::pause()
 {
     if (
