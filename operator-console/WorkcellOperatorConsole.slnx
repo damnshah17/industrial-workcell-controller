@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="WorkcellOperatorConsole.Core/WorkcellOperatorConsole.Core.csproj" />
+  <Project Path="WorkcellOperatorConsole.Tests/WorkcellOperatorConsole.Tests.csproj" />
+  <Project Path="WorkcellOperatorConsole/WorkcellOperatorConsole.csproj" />
+</Solution>

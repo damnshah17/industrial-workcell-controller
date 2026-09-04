@@ -105,3 +105,34 @@ jobs:
             --project service/MachineService/MachineService.csproj \
             --no-build \
             --configuration Release
+
+  operator-console:
+    name: WPF Operator Console
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore operator console
+        run: dotnet restore operator-console/WorkcellOperatorConsole.slnx
+
+      - name: Build operator console
+        run: >-
+          dotnet build
+          operator-console/WorkcellOperatorConsole.slnx
+          --no-restore
+          --configuration Release
+
+      - name: Test operator console client
+        run: >-
+          dotnet test
+          operator-console/WorkcellOperatorConsole.Tests/WorkcellOperatorConsole.Tests.csproj
+          --no-build
+          --configuration Release
