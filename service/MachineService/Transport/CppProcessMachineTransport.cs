@@ -97,6 +97,9 @@ public sealed class CppProcessMachineTransport :
                 "Failed to start C++ controller process."
             );
         }
+
+        _process.ErrorDataReceived += (_, _) => { };
+        _process.BeginErrorReadLine();
     }
 
     public async Task<ControllerResponse>

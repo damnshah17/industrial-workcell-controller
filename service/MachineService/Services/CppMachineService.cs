@@ -56,6 +56,20 @@ public sealed class CppMachineService :
     }
 
     public async Task<bool>
+        StartCycleAsync(
+            bool inspectionAccepted,
+            CancellationToken cancellationToken = default
+        )
+    {
+        return await ExecuteAsync(
+            inspectionAccepted
+                ? "cycle-accepted"
+                : "cycle-rejected",
+            cancellationToken
+        );
+    }
+
+    public async Task<bool>
         PauseAsync(
             CancellationToken cancellationToken =
                 default
@@ -149,7 +163,11 @@ public sealed class CppMachineService :
             response.State,
             response.EmergencyStopActive,
             response.Fault,
-            response.Cycle
+            response.Cycle,
+            response.Robot,
+            response.Conveyor,
+            response.Gripper,
+            response.PartSensor
         );
     }
     public async Task<bool>

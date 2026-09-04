@@ -1,4 +1,5 @@
 using MachineService.Services;
+using MachineService.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MachineService.Controllers;
@@ -77,6 +78,23 @@ public sealed class MachineController :
                     .PauseAsync(
                         cancellationToken
                     ),
+            cancellationToken
+        );
+    }
+
+    [HttpPost("cycle")]
+    public async Task<IActionResult>
+        StartCycle(
+            [FromBody] StartCycleRequest request,
+            CancellationToken cancellationToken
+        )
+    {
+        return await CommandResult(
+            () =>
+                _machineService.StartCycleAsync(
+                    request.InspectionAccepted,
+                    cancellationToken
+                ),
             cancellationToken
         );
     }

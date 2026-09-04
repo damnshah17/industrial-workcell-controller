@@ -20,7 +20,11 @@ public sealed class FakeMachineTransport
                 0,
                 0,
                 0
-            )
+            ),
+            new RobotStatus("Home", false, true),
+            new ConveyorStatus(false),
+            new GripperStatus(true),
+            new PartSensorStatus(false)
         );
 
     public Task<ControllerResponse> SendCommandAsync(

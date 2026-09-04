@@ -197,7 +197,11 @@ public sealed class CppMachineServiceTests
                             12,
                             10,
                             2
-                        )
+                        ),
+                        new RobotStatus("Home", false, true),
+                        new ConveyorStatus(true),
+                        new GripperStatus(true),
+                        new PartSensorStatus(false)
                     )
             };
 
@@ -230,6 +234,53 @@ public sealed class CppMachineServiceTests
         );
     }
 
+    [Theory]
+    [InlineData(true, "cycle-accepted")]
+    [InlineData(false, "cycle-rejected")]
+    public async Task StartCycleAsync_SendsInspectionDecision(
+        bool inspectionAccepted,
+        string expectedCommand
+    )
+    {
+        var transport = new FakeMachineTransport();
+        var service = new CppMachineService(transport);
+
+        var success = await service.StartCycleAsync(
+            inspectionAccepted
+        );
+
+        Assert.True(success);
+        Assert.Equal(expectedCommand, transport.LastCommand);
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_MapsHardwareTelemetry()
+    {
+        var transport = new FakeMachineTransport
+        {
+            Response = new ControllerResponse(
+                true,
+                MachineState.Running,
+                false,
+                false,
+                null,
+                new CycleStatus("MovingToPick", 3, 2, 1),
+                new RobotStatus("Home", true, true),
+                new ConveyorStatus(false),
+                new GripperStatus(true),
+                new PartSensorStatus(true)
+            )
+        };
+
+        var status = await new CppMachineService(transport)
+            .GetStatusAsync();
+
+        Assert.True(status.Robot.Moving);
+        Assert.False(status.Conveyor.Running);
+        Assert.True(status.Gripper.Open);
+        Assert.True(status.PartSensor.Active);
+    }
+
     private static ControllerResponse
         CreateResponse(
             bool success,
@@ -249,7 +300,11 @@ public sealed class CppMachineServiceTests
                 0,
                 0,
                 0
-            )
+            ),
+            new RobotStatus("Home", false, true),
+            new ConveyorStatus(false),
+            new GripperStatus(true),
+            new PartSensorStatus(false)
         );
     }
 }
