@@ -1,6 +1,6 @@
 # Local controller IPC
 
-Phase 9 moves ASP.NET-to-controller traffic from stdin/stdout to a loopback TCP connection. ASP.NET still owns the child-process lifetime, and `IMachineTransport` remains the boundary used by machine and simulation services.
+ASP.NET-to-controller traffic uses a loopback TCP connection. ASP.NET owns the child-process lifetime, and `IMachineTransport` remains the boundary used by machine and simulation services.
 
 ## Why loopback TCP
 
@@ -41,8 +41,13 @@ Configuration:
 "Controller": {
   "ExecutablePath": "../../controller/build/machine_bridge.exe",
   "StartupTimeoutMilliseconds": 5000,
-  "CommandTimeoutMilliseconds": 3000
+  "CommandTimeoutMilliseconds": 3000,
+  "MaxRestartAttempts": 3,
+  "RestartBackoffMilliseconds": 250,
+  "RecoveryCooldownMilliseconds": 5000
 }
 ```
 
-Automatic restart is intentionally deferred to Phase 10.
+If the process exits or the socket becomes unusable, the current command fails and is never replayed. The next command may perform a bounded restart/reconnect sequence. Failed recovery batches enter a cooldown to prevent an aggressive loop. A new controller always begins in `Offline`; ASP.NET never reissues lifecycle or production commands automatically.
+
+The port is selected by reserving an unused loopback port before process launch. A small release-before-bind race remains; startup timeout and bounded recovery handle the practical failure mode.

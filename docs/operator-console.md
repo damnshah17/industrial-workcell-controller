@@ -6,16 +6,17 @@ The operator console is a presentation-only REST client. It does not start the C
 
 - Live machine, cycle, robot, conveyor, gripper, sensor, safety, and fault telemetry
 - Initialize, start, pause, resume, stop, reset, Emergency Stop, and clear-E-stop controls
-- Accepted-part and rejected-part production commands
+- Selection of deterministic inspection samples and controller-produced accept/reject results
 - Production totals and persisted metrics
 - Production-cycle, fault, and machine-event history
-- Connection and rejected-command feedback
+- Distinct backend-disconnected, controller-unavailable, history-degraded, and healthy states
+- Rejected-command feedback without local lifecycle logic
 
 Live telemetry is refreshed every 500 ms. Persisted history and metrics are refreshed every five seconds and immediately after operator commands.
 
 ## Run
 
-Start the C++ bridge, PostgreSQL, and ASP.NET service using the existing backend instructions. Then, on Windows:
+ASP.NET starts and supervises the C++ bridge; do not launch it separately. Start PostgreSQL and ASP.NET using the root README, then on Windows run:
 
 ```powershell
 dotnet run --project operator-console/WorkcellOperatorConsole/WorkcellOperatorConsole.csproj
@@ -33,3 +34,5 @@ dotnet run --project operator-console/WorkcellOperatorConsole/WorkcellOperatorCo
 ```powershell
 dotnet test operator-console/WorkcellOperatorConsole.Tests/WorkcellOperatorConsole.Tests.csproj
 ```
+
+The cross-platform Core test project covers REST serialization, commands, health, history, fault display, and view-model behavior. It does not automate native desktop rendering.

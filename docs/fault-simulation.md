@@ -32,3 +32,5 @@ POST /api/machine/start
 ```
 
 Simulation endpoints are intentionally separate from `/api/machine`. The existing direct motion-timeout injection endpoint remains available for backward compatibility, while `/api/simulation/faults/motion-timeout` exercises the natural robot-stall and sequence-timeout path.
+
+See [Fault and safety handling](fault-handling.md) for detection, telemetry, persistence, E-stop semantics, and the complete operator recovery order.

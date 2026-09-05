@@ -32,3 +32,9 @@ unavailable controller or database dependency, and `500` for an unexpected
 service error. Error bodies contain a trace identifier but no exception details.
 The WPF console consumes `/health` over REST and distinguishes a backend outage,
 a controller outage, and degraded history. It does not restart components.
+
+The overall service is `Unhealthy` when controller transport is unavailable and
+`Degraded` when database or persistence history is impaired while control remains
+available. Health is passive for controller state; it does not issue lifecycle
+commands. WPF displays `DISCONNECTED`, `BACKEND OK • CONTROLLER UNAVAILABLE`,
+`CONTROLLER OK • HISTORY DEGRADED`, or `CONNECTED` as appropriate.

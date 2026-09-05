@@ -1,6 +1,6 @@
 # Machine vision inspection
 
-Phase 8 replaces the normal caller-supplied pass/fail decision with a C++ inspection result. The operator selects a known simulation sample; ASP.NET and the bridge pass only that identifier to the controller. `SequenceController` invokes `IInspectionSystem` at the `Inspecting` state and uses its result to select `AcceptBin` or `RejectBin`.
+The operator selects a known simulation sample; ASP.NET and the bridge pass only that identifier to the C++ controller. `SequenceController` invokes `IInspectionSystem` at the `Inspecting` state and uses its result to select the accept or reject route.
 
 ## Inspection method
 
@@ -34,8 +34,14 @@ Content-Type: application/json
 
 The normal telemetry response includes a compact `inspection` object with state, accepted result, reason, sample ID, feature coverage, and diagnostic details. Before an inspection completes its state is `Idle`.
 
-The legacy `inspectionAccepted` request and bridge commands remain available as a manual compatibility override for existing demos and tests. New operator flows use `sampleId`.
+The legacy `inspectionAccepted` request and bridge commands remain available as a compatibility override for existing tests. The operator workflow uses `sampleId`.
 
 ## Persistence
 
 Completed production-cycle history stores the controller-reported result, reason, sample identifier, and measured feature coverage. Images are not stored in PostgreSQL.
+
+## Why deterministic PGM inspection
+
+ASCII PGM samples keep the algorithm and fixtures inspectable, portable, and reproducible without native camera SDKs, GPU dependencies, or opaque model weights. This demonstrates the inspection boundary and routing contract; it is not presented as a production vision system.
+
+A real implementation can provide another `IInspectionSystem` backed by a camera/acquisition adapter while preserving `SequenceController`, inspection result telemetry, REST contracts, and persistence. Current limitations include fixed samples, fixed thresholds, no calibration, no lighting model, and no image retention.
