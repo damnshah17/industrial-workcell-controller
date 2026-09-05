@@ -10,15 +10,28 @@
 #include "simulation/SimRobotArm.hpp"
 
 #include <iostream>
+#include <cctype>
 #include <condition_variable>
 #include <functional>
 #include <future>
 #include <iomanip>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <utility>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
 
 namespace {
 
@@ -96,7 +109,6 @@ std::string makeResponse(
     std::ostringstream output;
 
     output
-        << RESPONSE_PREFIX
         << "{"
         << "\"success\":"
         << (success ? "true" : "false")
@@ -198,9 +210,148 @@ std::string makeResponse(
     return output.str();
 }
 
+std::optional<std::size_t> jsonPropertyValue(
+    const std::string& json,
+    const std::string& property
+)
+{
+    const auto key = "\"" + property + "\"";
+    auto position = std::size_t{0};
+    while ((position = json.find(key, position)) != std::string::npos)
+    {
+        auto separator = position + key.size();
+        while (separator < json.size() && std::isspace(
+            static_cast<unsigned char>(json[separator])))
+        {
+            ++separator;
+        }
+        if (separator < json.size() && json[separator] == ':')
+        {
+            return separator + 1;
+        }
+        position += key.size();
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> jsonString(
+    const std::string& json,
+    const std::string& property
+)
+{
+    const auto valuePosition = jsonPropertyValue(json, property);
+    if (!valuePosition.has_value())
+    {
+        return std::nullopt;
+    }
+    auto position = json.find('"', valuePosition.value());
+    if (position == std::string::npos)
+    {
+        return std::nullopt;
+    }
+    std::string value;
+    bool escaped = false;
+    for (++position; position < json.size(); ++position)
+    {
+        const char character = json[position];
+        if (escaped)
+        {
+            if (character != '"' && character != '\\')
+            {
+                return std::nullopt;
+            }
+            value += character;
+            escaped = false;
+        }
+        else if (character == '\\')
+        {
+            escaped = true;
+        }
+        else if (character == '"')
+        {
+            return value;
+        }
+        else
+        {
+            value += character;
+        }
+    }
+    return std::nullopt;
+}
+
+bool jsonBoolean(
+    const std::string& json,
+    const std::string& property,
+    bool defaultValue
+)
+{
+    const auto valuePosition = jsonPropertyValue(json, property);
+    if (!valuePosition.has_value())
+    {
+        return defaultValue;
+    }
+    const auto value = json.substr(valuePosition.value());
+    return value.find("true") < value.find("false");
+}
+
+std::string protocolResponse(
+    const std::string& requestId,
+    bool success,
+    const std::string& status,
+    const std::string& errorCode = {},
+    const std::string& errorMessage = {}
+)
+{
+    std::ostringstream output;
+    output << "{\"requestId\":\"" << escapeJson(requestId)
+        << "\",\"success\":" << (success ? "true" : "false")
+        << ",\"status\":" << status << ",\"error\":";
+    if (errorCode.empty())
+    {
+        output << "null";
+    }
+    else
+    {
+        output << "{\"code\":\"" << escapeJson(errorCode)
+            << "\",\"message\":\"" << escapeJson(errorMessage) << "\"}";
+    }
+    output << "}";
+    return output.str();
+}
+
+#ifdef _WIN32
+using SocketHandle = SOCKET;
+constexpr SocketHandle INVALID_SOCKET_HANDLE = INVALID_SOCKET;
+void closeSocket(SocketHandle socket) { closesocket(socket); }
+#else
+using SocketHandle = int;
+constexpr SocketHandle INVALID_SOCKET_HANDLE = -1;
+void closeSocket(SocketHandle socket) { close(socket); }
+#endif
+
+bool sendAll(SocketHandle socket, const std::string& message)
+{
+    std::size_t sent = 0;
+    while (sent < message.size())
+    {
+        const auto count = send(
+            socket,
+            message.data() + sent,
+            static_cast<int>(message.size() - sent),
+            0
+        );
+        if (count <= 0)
+        {
+            return false;
+        }
+        sent += static_cast<std::size_t>(count);
+    }
+    return true;
+}
+
 } // namespace
 
-int main()
+int main(int argc, char* argv[])
 {
     workcell::SimRobotArm robot;
     workcell::SimConveyor conveyor;
@@ -351,18 +502,19 @@ int main()
     );
 
     auto submit =
-        [&](std::string command)
+        [&](std::string command, bool legacyOutput = false)
         {
             auto response =
-                std::make_shared<std::promise<void>>();
+                std::make_shared<std::promise<std::pair<std::string, std::string>>>();
             auto result = response->get_future();
 
             {
                 std::lock_guard lock(queueMutex);
                 commands.push(
-                    [&, command = std::move(command), response]
+                    [&, command = std::move(command), response, legacyOutput]
                     {
                         bool success = false;
+                        bool knownCommand = true;
 
                         if (command == "status")
                         {
@@ -480,39 +632,174 @@ int main()
                                 }
                             }
                         }
+                        else
+                        {
+                            knownCommand = false;
+                        }
 
-                        std::cout
-                            << makeResponse(
-                                success,
-                                machine,
-                                sequence,
-                                robot,
-                                conveyor,
-                                gripper,
-                                sensor
-                            )
-                            << std::endl;
-
-                        response->set_value();
+                        auto error = !knownCommand
+                            ? std::string("UNKNOWN_COMMAND")
+                            : !success
+                                ? std::string("COMMAND_REJECTED")
+                                : std::string();
+                        auto status = makeResponse(
+                            success, machine, sequence, robot, conveyor, gripper, sensor
+                        );
+                        if (legacyOutput)
+                        {
+                            std::cout << RESPONSE_PREFIX << status << std::endl;
+                        }
+                        response->set_value({std::move(status), error});
                     }
                 );
             }
 
             queueChanged.notify_one();
-            result.get();
+            return result.get();
         };
 
-    std::string command;
-
-    while (std::getline(std::cin, command))
+    int tcpPort = 0;
+    if (argc == 3 && std::string(argv[1]) == "--tcp-port")
     {
-        if (command == "exit")
+        try
         {
-            submit("status");
-            break;
+            tcpPort = std::stoi(argv[2]);
+        }
+        catch (...)
+        {
+            return 2;
+        }
+    }
+
+    if (tcpPort > 0)
+    {
+#ifdef _WIN32
+        WSADATA socketData{};
+        if (WSAStartup(MAKEWORD(2, 2), &socketData) != 0)
+        {
+            return 3;
+        }
+#endif
+        const auto server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (server == INVALID_SOCKET_HANDLE)
+        {
+            return 3;
+        }
+        sockaddr_in address{};
+        address.sin_family = AF_INET;
+        address.sin_port = htons(static_cast<unsigned short>(tcpPort));
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        int reuse = 1;
+        setsockopt(server, SOL_SOCKET, SO_REUSEADDR,
+            reinterpret_cast<const char*>(&reuse), sizeof(reuse));
+        if (bind(server, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0
+            || listen(server, 1) != 0)
+        {
+            closeSocket(server);
+            return 3;
         }
 
-        submit(command);
+        const auto client = accept(server, nullptr, nullptr);
+        closeSocket(server);
+        if (client == INVALID_SOCKET_HANDLE)
+        {
+            return 3;
+        }
+
+        std::string buffer;
+        char incoming[4096];
+        bool stopServer = false;
+        while (!stopServer)
+        {
+            const auto count = recv(client, incoming, sizeof(incoming), 0);
+            if (count <= 0)
+            {
+                break;
+            }
+            buffer.append(incoming, static_cast<std::size_t>(count));
+            if (buffer.size() > 65536)
+            {
+                sendAll(client, protocolResponse("", false, "null", "MESSAGE_TOO_LARGE", "Request exceeded 64 KiB." ) + "\n");
+                break;
+            }
+            std::size_t newline = 0;
+            while ((newline = buffer.find('\n')) != std::string::npos)
+            {
+                auto message = buffer.substr(0, newline);
+                buffer.erase(0, newline + 1);
+                if (!message.empty() && message.back() == '\r')
+                {
+                    message.pop_back();
+                }
+                const auto requestId = jsonString(message, "requestId");
+                const auto protocolCommand = jsonString(message, "command");
+                if (!requestId.has_value() || !protocolCommand.has_value()
+                    || message.empty() || message.front() != '{' || message.back() != '}')
+                {
+                    if (!sendAll(client, protocolResponse(
+                        requestId.value_or(""), false, "null", "MALFORMED_REQUEST",
+                        "Request must be newline-delimited JSON with requestId and command.") + "\n"))
+                    {
+                        stopServer = true;
+                    }
+                    continue;
+                }
+
+                std::string command = protocolCommand.value();
+                if (command == "start-cycle")
+                {
+                    const auto sampleId = jsonString(message, "sampleId");
+                    command = sampleId.has_value()
+                        ? "cycle-sample-" + sampleId.value()
+                        : "";
+                }
+                else if (command == "configure-simulation-fault")
+                {
+                    const auto fault = jsonString(message, "fault");
+                    const bool enabled = jsonBoolean(message, "enabled", true);
+                    command = fault.has_value()
+                        ? "simulation-fault-" + fault.value() + (enabled ? "" : "-clear")
+                        : "";
+                }
+                else if (command == "shutdown")
+                {
+                    command = "status";
+                    stopServer = true;
+                }
+                else if (command == "diagnostic-delay")
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                    command = "status";
+                }
+
+                const auto [status, error] = submit(command);
+                const bool success = error.empty();
+                if (!sendAll(client, protocolResponse(
+                    requestId.value(), success, status, error,
+                    error == "UNKNOWN_COMMAND" ? "Unknown IPC command." : "Controller rejected the command.") + "\n"))
+                {
+                    stopServer = true;
+                }
+            }
+        }
+        closeSocket(client);
+#ifdef _WIN32
+        WSACleanup();
+#endif
+    }
+    else
+    {
+        std::string command;
+        while (std::getline(std::cin, command))
+        {
+            if (command == "exit")
+            {
+                submit("status", true);
+                break;
+            }
+
+            submit(command, true);
+        }
     }
 
     {

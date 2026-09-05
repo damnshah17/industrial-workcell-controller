@@ -70,6 +70,7 @@ jobs:
     env:
       ConnectionStrings__WorkcellDatabase: Host=localhost;Port=5432;Database=workcell_test;Username=workcell;Password=ci-test-only
       WORKCELL_TEST_CONNECTION_STRING: Host=localhost;Port=5432;Database=workcell_test;Username=workcell;Password=ci-test-only
+      WORKCELL_BRIDGE_PATH: controller/build-ipc/machine_bridge
 
     steps:
       - name: Checkout repository
@@ -79,6 +80,13 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
+
+      - name: Build C++ IPC bridge
+        run: |
+          cmake -S controller -B controller/build-ipc \
+            -DBUILD_TESTING=OFF \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build controller/build-ipc --target machine_bridge
 
       - name: Restore
         run: |

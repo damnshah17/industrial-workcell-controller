@@ -98,6 +98,10 @@ target_link_libraries(
         workcell_controller
 )
 
+if(WIN32)
+    target_link_libraries(machine_bridge PRIVATE ws2_32)
+endif()
+
 target_compile_definitions(
     machine_bridge
     PRIVATE
@@ -203,5 +207,15 @@ if(BUILD_TESTING)
         MachineBridgeVisionIntegration
         PROPERTIES TIMEOUT 30
     )
+
+    add_test(
+        NAME MachineBridgeIpcIntegration
+        COMMAND
+            ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/ipc_integration.py
+            $<TARGET_FILE:machine_bridge>
+    )
+
+    set_tests_properties(MachineBridgeIpcIntegration PROPERTIES TIMEOUT 20)
 
 endif()
