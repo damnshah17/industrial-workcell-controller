@@ -6,6 +6,7 @@ namespace MachineService.Persistence;
 public sealed class HistoryWriterService(
     HistoryWriteQueue queue,
     IDbContextFactory<WorkcellDbContext> contextFactory,
+    PersistenceHealthState health,
     ILogger<HistoryWriterService> logger
 ) : BackgroundService
 {
@@ -20,6 +21,7 @@ public sealed class HistoryWriterService(
             try
             {
                 await PersistAsync(write, stoppingToken);
+                health.RecordSuccess();
             }
             catch (OperationCanceledException) when (
                 stoppingToken.IsCancellationRequested
@@ -29,6 +31,7 @@ public sealed class HistoryWriterService(
             }
             catch (Exception exception)
             {
+                health.RecordFailure(exception);
                 logger.LogError(
                     exception,
                     "Failed to persist operational history record {RecordType}; controller operation is unaffected.",

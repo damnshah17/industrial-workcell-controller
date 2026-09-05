@@ -19,6 +19,9 @@ public sealed class HttpWorkcellApiClient : IWorkcellApiClient
         _httpClient = httpClient;
     }
 
+    public Task<SystemHealth> GetHealthAsync(CancellationToken cancellationToken = default) =>
+        GetAsync<SystemHealth>("health", cancellationToken);
+
     public Task<MachineStatus> GetStatusAsync(CancellationToken cancellationToken = default) =>
         GetAsync<MachineStatus>("api/machine/status", cancellationToken);
 

@@ -40,6 +40,29 @@ public sealed class OperatorConsoleViewModelTests
     }
 
     [Fact]
+    public async Task HealthDistinguishesControllerOutageFromBackendOutage()
+    {
+        var api = new FakeWorkcellApiClient { Health = TestData.Health(controller: "Unhealthy") };
+        using var viewModel = new OperatorConsoleViewModel(api);
+
+        await viewModel.RefreshStatusAsync();
+
+        Assert.Equal("BACKEND OK • CONTROLLER UNAVAILABLE", viewModel.ConnectionText);
+    }
+
+    [Fact]
+    public async Task HealthReportsHistoryDegradationWithoutHidingControllerTelemetry()
+    {
+        var api = new FakeWorkcellApiClient { Health = TestData.Health(database: "Degraded") };
+        using var viewModel = new OperatorConsoleViewModel(api);
+
+        await viewModel.RefreshStatusAsync();
+
+        Assert.Equal("CONTROLLER OK • HISTORY DEGRADED", viewModel.ConnectionText);
+        Assert.Equal("RUNNING", viewModel.MachineStateText);
+    }
+
+    [Fact]
     public async Task VisionCycleUsesSelectedSampleAndDisplaysControllerResult()
     {
         var api = new FakeWorkcellApiClient

@@ -4,6 +4,7 @@ namespace WorkcellOperatorConsole.Core.Services;
 
 public interface IWorkcellApiClient
 {
+    Task<SystemHealth> GetHealthAsync(CancellationToken cancellationToken = default);
     Task<MachineStatus> GetStatusAsync(CancellationToken cancellationToken = default);
     Task<MachineStatus> SendCommandAsync(string command, CancellationToken cancellationToken = default);
     Task<MachineStatus> StartCycleAsync(string sampleId, CancellationToken cancellationToken = default);

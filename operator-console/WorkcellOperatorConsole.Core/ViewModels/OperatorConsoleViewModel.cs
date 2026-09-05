@@ -134,6 +134,12 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
 
     public async Task RefreshStatusAsync(CancellationToken cancellationToken = default)
     {
+        var health = await _api.GetHealthAsync(cancellationToken);
+        RunOnContext(() => ApplyHealth(health));
+        if (health.Controller.Status.Equals("Unhealthy", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
         var status = await _api.GetStatusAsync(cancellationToken);
         RunOnContext(() => ApplyStatus(status, "Live telemetry updated."));
     }
@@ -258,9 +264,30 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
     private void ApplyStatus(MachineStatus status, string message)
     {
         Status = status;
-        ConnectionText = "CONNECTED";
+        if (ConnectionText == "CONNECTING") ConnectionText = "CONNECTED";
         OperatorMessage = message;
         LastUpdated = DateTimeOffset.Now;
+    }
+
+    private void ApplyHealth(SystemHealth health)
+    {
+        if (health.Controller.Status.Equals("Unhealthy", StringComparison.OrdinalIgnoreCase))
+        {
+            ConnectionText = "BACKEND OK • CONTROLLER UNAVAILABLE";
+            OperatorMessage = health.Controller.Message;
+        }
+        else if (health.Database.Status.Equals("Degraded", StringComparison.OrdinalIgnoreCase)
+            || health.Persistence.Status.Equals("Degraded", StringComparison.OrdinalIgnoreCase))
+        {
+            ConnectionText = "CONTROLLER OK • HISTORY DEGRADED";
+            OperatorMessage = health.Database.Status.Equals("Degraded", StringComparison.OrdinalIgnoreCase)
+                ? health.Database.Message
+                : health.Persistence.Message;
+        }
+        else
+        {
+            ConnectionText = "CONNECTED";
+        }
     }
 
     private void RunOnContext(Action action)
