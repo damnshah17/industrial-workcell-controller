@@ -24,8 +24,7 @@ public sealed class ApiExceptionMiddleware(
         }
         catch (Exception exception)
         {
-            var unavailable = exception is ControllerUnavailableException
-                or TimeoutException or IOException or DbException;
+            var unavailable = IsUnavailable(exception);
             var status = unavailable
                 ? StatusCodes.Status503ServiceUnavailable
                 : StatusCodes.Status500InternalServerError;
@@ -47,4 +46,8 @@ public sealed class ApiExceptionMiddleware(
             });
         }
     }
+
+    private static bool IsUnavailable(Exception exception) =>
+        exception is ControllerUnavailableException or TimeoutException or IOException or DbException
+        || exception.InnerException is not null && IsUnavailable(exception.InnerException);
 }
