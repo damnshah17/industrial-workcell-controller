@@ -26,7 +26,6 @@ public sealed class CppProcessMachineTransportTests
     public async Task ProcessConnectsRoundTripsAndShutsDownCleanly()
     {
         var executable = BridgeExecutable();
-        if (executable is null) return;
 
         int processId;
         using (var transport = CreateTransport(executable, 3000))
@@ -49,7 +48,6 @@ public sealed class CppProcessMachineTransportTests
     public async Task CommandTimeoutIsBoundedAndMarksTransportUnavailable()
     {
         var executable = BridgeExecutable();
-        if (executable is null) return;
 
         using var transport = CreateTransport(executable, 150);
         await Assert.ThrowsAsync<TimeoutException>(
@@ -62,7 +60,6 @@ public sealed class CppProcessMachineTransportTests
     public async Task ControllerShutdownRecoversOnNextCommand()
     {
         var executable = BridgeExecutable();
-        if (executable is null) return;
 
         using var transport = CreateTransport(executable, 3000);
         var processId = transport.ProcessId;
@@ -77,7 +74,6 @@ public sealed class CppProcessMachineTransportTests
     public async Task UnexpectedProcessExitRecoversOnNextCommand()
     {
         var executable = BridgeExecutable();
-        if (executable is null) return;
 
         using var transport = CreateTransport(executable, 3000);
         var originalProcessId = transport.ProcessId;
@@ -96,7 +92,6 @@ public sealed class CppProcessMachineTransportTests
     public async Task UnrecoverableOutageFailsWithinBoundedRestartPolicy()
     {
         var executable = BridgeExecutable();
-        if (executable is null) return;
         var testDirectory = Path.Combine(Path.GetTempPath(), $"workcell-bridge-{Guid.NewGuid():N}");
         Directory.CreateDirectory(testDirectory);
         var testExecutable = Path.Combine(testDirectory, Path.GetFileName(executable));
@@ -126,6 +121,21 @@ public sealed class CppProcessMachineTransportTests
         }
     }
 
+    [Fact]
+    public async Task CanceledInFlightRequestDoesNotCorruptRequestAfterReconnect()
+    {
+        using var transport = CreateTransport(BridgeExecutable(), 3000);
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => transport.SendCommandAsync("diagnostic-delay", cancellation.Token)
+        );
+        var status = await transport.SendCommandAsync("status");
+
+        Assert.Equal("Offline", status.State.ToString());
+        Assert.Equal(1, transport.GetHealth().RestartCount);
+    }
+
     private static CppProcessMachineTransport CreateTransport(
         string executable,
         int timeout,
@@ -143,20 +153,21 @@ public sealed class CppProcessMachineTransportTests
 
     private static async Task WaitForExitAsync(int processId)
     {
-        using var process = Process.GetProcessById(processId);
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        await process.WaitForExitAsync(timeout.Token);
+        Process process;
+        try
+        {
+            process = Process.GetProcessById(processId);
+        }
+        catch (ArgumentException)
+        {
+            return;
+        }
+        using (process)
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            await process.WaitForExitAsync(timeout.Token);
+        }
     }
 
-    private static string? BridgeExecutable()
-    {
-        var configured = Environment.GetEnvironmentVariable("WORKCELL_BRIDGE_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
-        {
-            return Path.GetFullPath(configured);
-        }
-        var name = OperatingSystem.IsWindows() ? "machine_bridge.exe" : "machine_bridge";
-        var local = Path.GetFullPath(Path.Combine("controller", "build", name));
-        return File.Exists(local) ? local : null;
-    }
+    private static string BridgeExecutable() => Integration.HostedMachineFactory.FindBridge();
 }

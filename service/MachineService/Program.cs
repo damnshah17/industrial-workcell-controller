@@ -58,3 +58,5 @@ app.UseMiddleware<ApiExceptionMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program;
