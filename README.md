@@ -97,16 +97,7 @@ Manual setup commands and configuration are documented in [Persistence](docs/per
 
 ## Quick demo
 
-1. Start the backend and WPF console using Quick Start.
-2. Initialize, then start the machine.
-3. Run `good-part`; show PASS, accept routing, and the accepted history row.
-4. Run `missing-hole`; show FAIL, reject routing, and the rejected history row.
-5. Enable `robot-communication`, start a cycle, and show the controller fault and history.
-6. Clear the simulated condition, reset, and start again.
-7. Trigger E-stop during a cycle; clear the E-stop condition and reset.
-8. Show cycle totals, acceptance rate, fault count, and `/health`.
-
-See [API](docs/api.md) for a terminal-driven version.
+The [final demonstration guide](docs/demo.md) provides a repeatable 5–10 minute walkthrough of health, accepted and rejected inspection, persisted metrics/history, simulated hardware failure, safe fault recovery, and Emergency Stop. The [API reference](docs/api.md) includes terminal commands for inspecting the same system boundary.
 
 ## API overview
 
@@ -144,4 +135,4 @@ This is simulation software, not safety-certified industrial control software. I
 
 ## Documentation
 
-[Architecture](docs/architecture.md) · [State machines](docs/state-machine.md) · [API](docs/api.md) · [Fault handling](docs/fault-handling.md) · [Machine vision](docs/machine-vision.md) · [IPC](docs/ipc.md) · [Persistence](docs/persistence.md) · [Reliability](docs/reliability.md) · [Operator console](docs/operator-console.md)
+[Final demo](docs/demo.md) · [Technical summary](docs/technical-summary.md) · [Engineering tradeoffs](docs/tradeoffs.md) · [Architecture](docs/architecture.md) · [State machines](docs/state-machine.md) · [API](docs/api.md) · [Fault handling](docs/fault-handling.md) · [Machine vision](docs/machine-vision.md) · [IPC](docs/ipc.md) · [Persistence](docs/persistence.md) · [Reliability](docs/reliability.md) · [Operator console](docs/operator-console.md)
