@@ -71,20 +71,32 @@ internal sealed class HostedMachineFactory(
     internal static string FindBridge()
     {
         var configured = Environment.GetEnvironmentVariable("WORKCELL_BRIDGE_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
-            return Path.GetFullPath(configured);
+        if (!string.IsNullOrWhiteSpace(configured) && Path.IsPathRooted(configured))
+        {
+            if (File.Exists(configured)) return Path.GetFullPath(configured);
+            throw MissingBridge(configured);
+        }
         var name = OperatingSystem.IsWindows() ? "machine_bridge.exe" : "machine_bridge";
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
              directory is not null;
              directory = directory.Parent)
         {
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                var configuredCandidate = Path.Combine(directory.FullName, configured);
+                if (File.Exists(configuredCandidate)) return Path.GetFullPath(configuredCandidate);
+            }
             var candidate = Path.Combine(directory.FullName, "controller", "build", name);
             if (File.Exists(candidate)) return candidate;
         }
-        throw new FileNotFoundException(
-            "Build machine_bridge or set WORKCELL_BRIDGE_PATH before running hosted integration tests."
-        );
+        throw MissingBridge(configured);
     }
+
+    private static FileNotFoundException MissingBridge(string? configured) => new(
+        string.IsNullOrWhiteSpace(configured)
+            ? "Build machine_bridge or set WORKCELL_BRIDGE_PATH before running hosted integration tests."
+            : $"machine_bridge was not found at configured path '{configured}' relative to the repository root."
+    );
 
     private sealed class UnavailableTransport : IMachineTransport
     {

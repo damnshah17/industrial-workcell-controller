@@ -70,7 +70,7 @@ jobs:
     env:
       ConnectionStrings__WorkcellDatabase: Host=localhost;Port=5432;Database=workcell_test;Username=workcell;Password=ci-test-only
       WORKCELL_TEST_CONNECTION_STRING: Host=localhost;Port=5432;Database=workcell_test;Username=workcell;Password=ci-test-only
-      WORKCELL_BRIDGE_PATH: controller/build-ipc/machine_bridge
+      WORKCELL_BRIDGE_PATH: ${{ github.workspace }}/controller/build-ipc/machine_bridge
 
     steps:
       - name: Checkout repository
