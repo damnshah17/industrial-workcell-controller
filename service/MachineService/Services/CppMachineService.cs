@@ -69,6 +69,29 @@ public sealed class CppMachineService :
         );
     }
 
+    public async Task<bool> StartCycleAsync(
+        string sampleId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var knownSamples = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "good-part",
+            "missing-hole",
+            "malformed-part",
+            "unreadable-part"
+        };
+        if (!knownSamples.Contains(sampleId))
+        {
+            return false;
+        }
+
+        return await ExecuteAsync(
+            $"cycle-sample-{sampleId}",
+            cancellationToken
+        );
+    }
+
     public async Task<bool>
         PauseAsync(
             CancellationToken cancellationToken =
@@ -167,7 +190,8 @@ public sealed class CppMachineService :
             response.Robot,
             response.Conveyor,
             response.Gripper,
-            response.PartSensor
+            response.PartSensor,
+            response.Inspection
         );
     }
     public async Task<bool>

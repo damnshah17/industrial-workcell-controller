@@ -14,7 +14,8 @@ public sealed record MachineEventWrite(
 public sealed record CycleStartedWrite(
     Guid Id,
     DateTimeOffset StartedAt,
-    bool Accepted
+    bool? Accepted,
+    string? InspectionSampleId = null
 ) : HistoryWrite;
 
 public sealed record CycleFinishedWrite(
@@ -23,7 +24,11 @@ public sealed record CycleFinishedWrite(
     string FinalStatus,
     bool Faulted,
     string? FaultCode,
-    string? FaultMessage
+    string? FaultMessage,
+    bool? Accepted = null,
+    string? InspectionReason = null,
+    string? InspectionSampleId = null,
+    double? InspectionFeatureCoverage = null
 ) : HistoryWrite;
 
 public sealed record FaultRaisedWrite(

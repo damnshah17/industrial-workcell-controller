@@ -8,5 +8,6 @@ public sealed record MachineStatus(
     RobotStatus Robot,
     ConveyorStatus Conveyor,
     GripperStatus Gripper,
-    PartSensorStatus PartSensor
+    PartSensorStatus PartSensor,
+    InspectionStatus? Inspection = null
 );

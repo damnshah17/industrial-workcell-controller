@@ -155,10 +155,15 @@
                             <Border Grid.Column="1" Style="{StaticResource StatusCard}">
                                 <StackPanel>
                                     <TextBlock Text="PRODUCTION" Style="{StaticResource SectionTitle}" />
-                                    <Button Content="PROCESS ACCEPTED PART" Command="{Binding AcceptedCycleCommand}"
+                                    <TextBlock Text="INSPECTION SAMPLE" Style="{StaticResource CardLabel}" />
+                                    <ComboBox ItemsSource="{Binding InspectionSamples}" SelectedItem="{Binding SelectedSample}"
+                                              Margin="0,6,0,10" Padding="8" />
+                                    <Button Content="START VISION CYCLE" Command="{Binding StartVisionCycleCommand}"
                                             Background="#237548" Padding="18,15" />
-                                    <Button Content="PROCESS REJECTED PART" Command="{Binding RejectedCycleCommand}"
-                                            Background="#8A6824" Padding="18,15" />
+                                    <TextBlock Text="{Binding InspectionText}" FontSize="17" FontWeight="Bold"
+                                               Foreground="{StaticResource AccentBrush}" Margin="0,12,0,2" />
+                                    <TextBlock Text="{Binding InspectionDetailsText}" TextWrapping="Wrap"
+                                               Foreground="{StaticResource MutedBrush}" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -208,6 +213,8 @@
                             <DataGridTextColumn Header="STARTED" Binding="{Binding StartedAt, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="180" />
                             <DataGridTextColumn Header="COMPLETED" Binding="{Binding CompletedAt, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" Width="180" />
                             <DataGridTextColumn Header="RESULT" Binding="{Binding Result}" Width="110" />
+                            <DataGridTextColumn Header="SAMPLE" Binding="{Binding InspectionSampleId}" Width="130" />
+                            <DataGridTextColumn Header="INSPECTION" Binding="{Binding InspectionReason}" Width="160" />
                             <DataGridTextColumn Header="STATUS" Binding="{Binding FinalStatus}" Width="120" />
                             <DataGridTextColumn Header="DURATION (ms)" Binding="{Binding DurationMilliseconds}" Width="130" />
                             <DataGridTextColumn Header="FAULT" Binding="{Binding FaultCode}" Width="*" />

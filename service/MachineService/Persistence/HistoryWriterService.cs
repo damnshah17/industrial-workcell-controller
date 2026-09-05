@@ -64,6 +64,7 @@ public sealed class HistoryWriterService(
                     Id = item.Id,
                     StartedAt = item.StartedAt,
                     Accepted = item.Accepted,
+                    InspectionSampleId = item.InspectionSampleId,
                     FinalStatus = "Running"
                 });
                 break;
@@ -96,6 +97,12 @@ public sealed class HistoryWriterService(
                 }
                 cycle.FaultCode = item.FaultCode;
                 cycle.FaultMessage = item.FaultMessage;
+                cycle.Accepted = item.FinalStatus == "Completed"
+                    ? item.Accepted ?? cycle.Accepted
+                    : null;
+                cycle.InspectionReason = item.InspectionReason;
+                cycle.InspectionSampleId = item.InspectionSampleId ?? cycle.InspectionSampleId;
+                cycle.InspectionFeatureCoverage = item.InspectionFeatureCoverage;
                 break;
 
             case FaultRaisedWrite item:

@@ -9,17 +9,21 @@ SequenceController::SequenceController(
     IRobotArm& robot,
     IConveyor& conveyor,
     IGripper& gripper,
-    ISensor& partSensor
+    ISensor& partSensor,
+    IInspectionSystem* inspectionSystem
 )
     : robot_(robot),
       conveyor_(conveyor),
       gripper_(gripper),
       partSensor_(partSensor),
+      inspectionSystem_(inspectionSystem),
       currentState_(CycleState::WaitingForPart),
       totalCycles_(0),
       acceptedCycles_(0),
       rejectedCycles_(0),
       inspectionAccepted_(std::nullopt),
+      inspectionSampleId_(std::nullopt),
+      inspectionResult_(std::nullopt),
       fault_(std::nullopt),
       motionTimeout_(
           std::chrono::milliseconds(3000)
@@ -86,6 +90,16 @@ bool SequenceController::startCycle(
 
     inspectionAccepted_ =
         inspectionAccepted;
+    inspectionSampleId_.reset();
+    inspectionResult_ = InspectionResult{
+        inspectionAccepted,
+        inspectionAccepted
+            ? InspectionReason::Pass
+            : InspectionReason::MissingFeature,
+        "manual-override",
+        0.0,
+        "Manual inspection override."
+    };
 
     Logger::info(
         "Part detected. Production cycle started."
@@ -95,6 +109,24 @@ bool SequenceController::startCycle(
         CycleState::StoppingConveyor
     );
 
+    return true;
+}
+
+bool SequenceController::startCycle(const std::string& sampleId)
+{
+    if (inspectionSystem_ == nullptr)
+    {
+        return false;
+    }
+
+    if (!startCycle(true))
+    {
+        return false;
+    }
+
+    inspectionAccepted_.reset();
+    inspectionResult_.reset();
+    inspectionSampleId_ = sampleId;
     return true;
 }
 
@@ -246,6 +278,22 @@ void SequenceController::update()
 
         case CycleState::Inspecting:
         {
+            if (inspectionSampleId_.has_value())
+            {
+                inspectionResult_ = inspectionSystem_->inspect(
+                    inspectionSampleId_.value()
+                );
+                if (inspectionResult_->reason == InspectionReason::InspectionError)
+                {
+                    failCycle(
+                        FaultCode::InspectionFailure,
+                        inspectionResult_->details.c_str()
+                    );
+                    return;
+                }
+                inspectionAccepted_ = inspectionResult_->accepted;
+            }
+
             if (!inspectionAccepted_.has_value())
             {
                 failCycle(
@@ -596,6 +644,8 @@ bool SequenceController::resetForNextCycle()
     }
 
     inspectionAccepted_.reset();
+    inspectionSampleId_.reset();
+    inspectionResult_.reset();
     fault_.reset();
 
     paused_ = false;
@@ -630,6 +680,12 @@ unsigned int
 SequenceController::getRejectedCycles() const
 {
     return rejectedCycles_;
+}
+
+const std::optional<InspectionResult>&
+SequenceController::getInspectionResult() const
+{
+    return inspectionResult_;
 }
 
 void SequenceController::setMotionTimeout(

@@ -30,6 +30,8 @@ public sealed class WorkcellDbContext(
             entity.Property(x => x.FinalStatus).HasMaxLength(32);
             entity.Property(x => x.FaultCode).HasMaxLength(64);
             entity.Property(x => x.FaultMessage).HasMaxLength(512);
+            entity.Property(x => x.InspectionReason).HasMaxLength(64);
+            entity.Property(x => x.InspectionSampleId).HasMaxLength(64);
             entity.HasIndex(x => x.StartedAt);
         });
 

@@ -86,6 +86,28 @@ public sealed class MachineHistoryTracker(
         }
     }
 
+    public void RecordCycleStarted(string sampleId, MachineStatus status)
+    {
+        lock (_sync)
+        {
+            if (_activeCycleId.HasValue)
+            {
+                return;
+            }
+
+            var now = timeProvider.GetUtcNow();
+            _activeCycleId = Guid.NewGuid();
+            Enqueue(new CycleStartedWrite(_activeCycleId.Value, now, null, sampleId));
+            Enqueue(new MachineEventWrite(
+                now,
+                "CycleStarted",
+                status.State,
+                $"Vision production cycle started with sample '{sampleId}'."
+            ));
+            ObserveCore(status);
+        }
+    }
+
     public void Observe(MachineStatus status)
     {
         lock (_sync)
@@ -164,7 +186,11 @@ public sealed class MachineHistoryTracker(
             finalStatus,
             finalStatus == "Faulted",
             status.ActiveFault?.Code,
-            status.ActiveFault?.Message
+            status.ActiveFault?.Message,
+            finalStatus == "Completed" ? status.Inspection?.Accepted : null,
+            status.Inspection?.Reason,
+            status.Inspection?.SampleId,
+            status.Inspection?.FeatureCoverage
         ));
         Enqueue(new MachineEventWrite(
             now,

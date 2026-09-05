@@ -109,6 +109,21 @@ bool MachineController::startProductionCycle(
     );
 }
 
+bool MachineController::startProductionCycle(const std::string& sampleId)
+{
+    if (currentState_ != MachineState::Running)
+    {
+        return false;
+    }
+
+    if (sequenceController_.getState() == CycleState::CycleComplete)
+    {
+        sequenceController_.resetForNextCycle();
+    }
+
+    return sequenceController_.startCycle(sampleId);
+}
+
 bool MachineController::pause()
 {
     if (

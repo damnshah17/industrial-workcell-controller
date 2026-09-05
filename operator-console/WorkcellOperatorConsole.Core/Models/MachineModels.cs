@@ -21,6 +21,14 @@ public sealed record RobotStatus(string Position, bool Moving, bool Initialized)
 public sealed record ConveyorStatus(bool Running);
 public sealed record GripperStatus(bool Open);
 public sealed record PartSensorStatus(bool Active);
+public sealed record InspectionStatus(
+    string State,
+    bool? Accepted = null,
+    string? Reason = null,
+    string? SampleId = null,
+    double? FeatureCoverage = null,
+    string? Details = null
+);
 
 public sealed record MachineStatus(
     MachineState State,
@@ -30,7 +38,8 @@ public sealed record MachineStatus(
     RobotStatus Robot,
     ConveyorStatus Conveyor,
     GripperStatus Gripper,
-    PartSensorStatus PartSensor
+    PartSensorStatus PartSensor,
+    InspectionStatus? Inspection = null
 );
 
 public sealed record CommandResponse(bool Success, MachineStatus Status);

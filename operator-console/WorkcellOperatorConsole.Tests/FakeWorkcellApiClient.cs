@@ -7,7 +7,7 @@ internal sealed class FakeWorkcellApiClient : IWorkcellApiClient
 {
     public MachineStatus Status { get; set; } = TestData.Status();
     public string? LastCommand { get; private set; }
-    public bool? LastInspectionAccepted { get; private set; }
+    public string? LastInspectionSample { get; private set; }
 
     public Task<MachineStatus> GetStatusAsync(CancellationToken cancellationToken = default) => Task.FromResult(Status);
 
@@ -17,9 +17,9 @@ internal sealed class FakeWorkcellApiClient : IWorkcellApiClient
         return Task.FromResult(Status);
     }
 
-    public Task<MachineStatus> StartCycleAsync(bool inspectionAccepted, CancellationToken cancellationToken = default)
+    public Task<MachineStatus> StartCycleAsync(string sampleId, CancellationToken cancellationToken = default)
     {
-        LastInspectionAccepted = inspectionAccepted;
+        LastInspectionSample = sampleId;
         return Task.FromResult(Status);
     }
 

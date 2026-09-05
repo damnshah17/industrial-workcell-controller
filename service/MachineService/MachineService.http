@@ -6,7 +6,16 @@ POST {{MachineService_HostAddress}}/api/machine/cycle
 Content-Type: application/json
 
 {
-  "inspectionAccepted": true
+  "sampleId": "good-part"
+}
+
+### Missing-feature rejection sample
+
+POST {{MachineService_HostAddress}}/api/machine/cycle
+Content-Type: application/json
+
+{
+  "sampleId": "missing-hole"
 }
 
 GET {{MachineService_HostAddress}}/weatherforecast/

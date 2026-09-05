@@ -28,11 +28,11 @@ public sealed class HttpWorkcellApiClient : IWorkcellApiClient
     ) => PostAsync($"api/machine/{command}", null, cancellationToken);
 
     public Task<MachineStatus> StartCycleAsync(
-        bool inspectionAccepted,
+        string sampleId,
         CancellationToken cancellationToken = default
     ) => PostAsync(
         "api/machine/cycle",
-        new { inspectionAccepted },
+        new { sampleId },
         cancellationToken
     );
 

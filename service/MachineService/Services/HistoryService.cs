@@ -40,7 +40,7 @@ public sealed class HistoryService(
             .OrderByDescending(x => x.StartedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new ProductionCycleDto(x.Id, x.StartedAt, x.CompletedAt, x.Accepted, x.DurationMilliseconds, x.FinalStatus, x.Faulted, x.FaultCode, x.FaultMessage))
+            .Select(x => new ProductionCycleDto(x.Id, x.StartedAt, x.CompletedAt, x.Accepted, x.DurationMilliseconds, x.FinalStatus, x.Faulted, x.FaultCode, x.FaultMessage, x.InspectionReason, x.InspectionSampleId, x.InspectionFeatureCoverage))
             .ToListAsync(cancellationToken);
         return new(items, page, pageSize, count);
     }
@@ -54,7 +54,7 @@ public sealed class HistoryService(
         return await db.ProductionCycles
             .AsNoTracking()
             .Where(x => x.Id == id)
-            .Select(x => new ProductionCycleDto(x.Id, x.StartedAt, x.CompletedAt, x.Accepted, x.DurationMilliseconds, x.FinalStatus, x.Faulted, x.FaultCode, x.FaultMessage))
+            .Select(x => new ProductionCycleDto(x.Id, x.StartedAt, x.CompletedAt, x.Accepted, x.DurationMilliseconds, x.FinalStatus, x.Faulted, x.FaultCode, x.FaultMessage, x.InspectionReason, x.InspectionSampleId, x.InspectionFeatureCoverage))
             .SingleOrDefaultAsync(cancellationToken);
     }
 

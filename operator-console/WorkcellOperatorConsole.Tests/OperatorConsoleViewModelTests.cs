@@ -38,4 +38,29 @@ public sealed class OperatorConsoleViewModelTests
         Assert.Empty(viewModel.Events);
         Assert.NotNull(viewModel.Metrics);
     }
+
+    [Fact]
+    public async Task VisionCycleUsesSelectedSampleAndDisplaysControllerResult()
+    {
+        var api = new FakeWorkcellApiClient
+        {
+            Status = TestData.Status() with
+            {
+                Inspection = new InspectionStatus(
+                    "Complete", false, "MISSING_FEATURE", "missing-hole", 0.0,
+                    "Required opening was not detected."
+                )
+            }
+        };
+        using var viewModel = new OperatorConsoleViewModel(api)
+        {
+            SelectedSample = "missing-hole"
+        };
+
+        await viewModel.StartVisionCycleCommand.ExecuteAsync();
+
+        Assert.Equal("missing-hole", api.LastInspectionSample);
+        Assert.Equal("FAIL — MISSING_FEATURE", viewModel.InspectionText);
+        Assert.Equal("Required opening was not detected.", viewModel.InspectionDetailsText);
+    }
 }

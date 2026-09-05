@@ -40,6 +40,20 @@ public sealed class PersistentMachineService(
         return success;
     }
 
+    public async Task<bool> StartCycleAsync(
+        string sampleId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var success = await controller.StartCycleAsync(sampleId, cancellationToken);
+        if (success)
+        {
+            var status = await controller.GetStatusAsync(cancellationToken);
+            history.RecordCycleStarted(sampleId, status);
+        }
+        return success;
+    }
+
     public Task<bool> PauseAsync(CancellationToken cancellationToken = default) =>
         ExecuteAsync(controller.PauseAsync, "Paused", "Machine paused.", cancellationToken);
 

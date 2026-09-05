@@ -30,6 +30,8 @@ public:
         bool inspectionAccepted
     );
 
+    bool startProductionCycle(const std::string& sampleId);
+
     bool pause();
 
     bool resume();

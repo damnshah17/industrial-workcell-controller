@@ -93,6 +93,35 @@ public sealed class MachineHistoryTrackerTests
         Assert.Equal("Aborted", finished.FinalStatus);
     }
 
+    [Fact]
+    public void VisionResultComesFromCompletionTelemetryAndIsWrittenOnce()
+    {
+        var queue = new CollectingHistoryWriteQueue();
+        var tracker = CreateTracker(queue);
+        tracker.RecordCycleStarted(
+            "missing-hole",
+            CreateStatus(MachineState.Running, "StoppingConveyor")
+        );
+        var completed = CreateStatus(
+            MachineState.Running,
+            "CycleComplete",
+            inspection: new InspectionStatus(
+                "Complete", false, "MISSING_FEATURE", "missing-hole", 0.0,
+                "Required opening was not detected."
+            )
+        );
+
+        tracker.Observe(completed);
+        tracker.Observe(completed);
+
+        var started = Assert.Single(queue.Writes.OfType<CycleStartedWrite>());
+        Assert.Null(started.Accepted);
+        var finished = Assert.Single(queue.Writes.OfType<CycleFinishedWrite>());
+        Assert.False(finished.Accepted);
+        Assert.Equal("MISSING_FEATURE", finished.InspectionReason);
+        Assert.Equal("missing-hole", finished.InspectionSampleId);
+    }
+
     private static MachineHistoryTracker CreateTracker(
         IHistoryWriteQueue queue
     ) => new(
@@ -104,7 +133,8 @@ public sealed class MachineHistoryTrackerTests
     private static MachineStatus CreateStatus(
         MachineState state,
         string cycleState,
-        FaultInfo? fault = null
+        FaultInfo? fault = null,
+        InspectionStatus? inspection = null
     ) => new(
         state,
         state == MachineState.EmergencyStop,
@@ -113,6 +143,7 @@ public sealed class MachineHistoryTrackerTests
         new RobotStatus("Home", false, true),
         new ConveyorStatus(false),
         new GripperStatus(true),
-        new PartSensorStatus(false)
+        new PartSensorStatus(false),
+        inspection
     );
 }
