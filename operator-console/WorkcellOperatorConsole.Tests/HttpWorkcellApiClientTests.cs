@@ -7,16 +7,16 @@ namespace WorkcellOperatorConsole.Tests;
 public sealed class HttpWorkcellApiClientTests
 {
     [Fact]
-    public async Task StartAcceptedCycleUsesOnlyRestEndpoint()
+    public async Task StartVisionCycleUsesOnlyRestEndpoint()
     {
         var handler = new StubHandler(HttpStatusCode.OK, CommandJson("Running"));
         var client = CreateClient(handler);
 
-        var status = await client.StartCycleAsync(true);
+        var status = await client.StartCycleAsync("good-part");
 
         Assert.Equal("/api/machine/cycle", handler.Request?.RequestUri?.AbsolutePath);
         Assert.Equal(HttpMethod.Post, handler.Request?.Method);
-        Assert.Contains("\"inspectionAccepted\":true", handler.Body);
+        Assert.Contains("\"sampleId\":\"good-part\"", handler.Body);
         Assert.Equal(WorkcellOperatorConsole.Core.Models.MachineState.Running, status.State);
     }
 

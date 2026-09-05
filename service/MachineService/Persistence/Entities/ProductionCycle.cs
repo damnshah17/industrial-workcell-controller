@@ -11,4 +11,7 @@ public sealed class ProductionCycle
     public bool Faulted { get; set; }
     public string? FaultCode { get; set; }
     public string? FaultMessage { get; set; }
+    public string? InspectionReason { get; set; }
+    public string? InspectionSampleId { get; set; }
+    public double? InspectionFeatureCoverage { get; set; }
 }

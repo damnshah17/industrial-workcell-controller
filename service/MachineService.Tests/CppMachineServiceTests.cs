@@ -254,6 +254,40 @@ public sealed class CppMachineServiceTests
     }
 
     [Fact]
+    public async Task StartVisionCycle_SendsKnownSampleWithoutCallerDecision()
+    {
+        var transport = new FakeMachineTransport();
+        var service = new CppMachineService(transport);
+
+        Assert.True(await service.StartCycleAsync("missing-hole"));
+        Assert.Equal("cycle-sample-missing-hole", transport.LastCommand);
+        Assert.False(await service.StartCycleAsync("../../unsafe"));
+        Assert.Equal("cycle-sample-missing-hole", transport.LastCommand);
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_MapsInspectionTelemetry()
+    {
+        var transport = new FakeMachineTransport
+        {
+            Response = new ControllerResponse(
+                true, MachineState.Running, false, false, null,
+                new CycleStatus("CycleComplete", 1, 0, 1),
+                new RobotStatus("Home", false, true),
+                new ConveyorStatus(true), new GripperStatus(true),
+                new PartSensorStatus(false),
+                new InspectionStatus("Complete", false, "MISSING_FEATURE", "missing-hole", 0.0, "Opening missing")
+            )
+        };
+
+        var status = await new CppMachineService(transport).GetStatusAsync();
+
+        Assert.False(status.Inspection?.Accepted);
+        Assert.Equal("MISSING_FEATURE", status.Inspection?.Reason);
+        Assert.Equal("missing-hole", status.Inspection?.SampleId);
+    }
+
+    [Fact]
     public async Task GetStatusAsync_MapsHardwareTelemetry()
     {
         var transport = new FakeMachineTransport

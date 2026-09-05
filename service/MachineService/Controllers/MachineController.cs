@@ -90,11 +90,11 @@ public sealed class MachineController :
         )
     {
         return await CommandResult(
-            () =>
-                _machineService.StartCycleAsync(
-                    request.InspectionAccepted,
-                    cancellationToken
-                ),
+            () => request.SampleId is not null
+                ? _machineService.StartCycleAsync(request.SampleId, cancellationToken)
+                : request.InspectionAccepted.HasValue
+                    ? _machineService.StartCycleAsync(request.InspectionAccepted.Value, cancellationToken)
+                    : Task.FromResult(false),
             cancellationToken
         );
     }

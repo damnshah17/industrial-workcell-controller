@@ -31,5 +31,8 @@ public sealed record ControllerResponse(
     GripperStatus Gripper,
 
     [property: JsonPropertyName("partSensor")]
-    PartSensorStatus PartSensor
+    PartSensorStatus PartSensor,
+
+    [property: JsonPropertyName("inspection")]
+    InspectionStatus? Inspection = null
 );

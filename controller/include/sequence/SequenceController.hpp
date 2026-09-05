@@ -5,10 +5,12 @@
 #include "hardware/IGripper.hpp"
 #include "hardware/IRobotArm.hpp"
 #include "hardware/ISensor.hpp"
+#include "inspection/IInspectionSystem.hpp"
 #include "sequence/CycleState.hpp"
 
 #include <chrono>
 #include <optional>
+#include <string>
 
 namespace workcell {
 
@@ -19,7 +21,8 @@ public:
         IRobotArm& robot,
         IConveyor& conveyor,
         IGripper& gripper,
-        ISensor& partSensor
+        ISensor& partSensor,
+        IInspectionSystem* inspectionSystem = nullptr
     );
 
     CycleState getState() const;
@@ -27,6 +30,8 @@ public:
     bool startCycle(
         bool inspectionAccepted
     );
+
+    bool startCycle(const std::string& sampleId);
 
     void update();
 
@@ -46,6 +51,8 @@ public:
     unsigned int getAcceptedCycles() const;
     unsigned int getRejectedCycles() const;
 
+    const std::optional<InspectionResult>& getInspectionResult() const;
+
     void setMotionTimeout(
         std::chrono::milliseconds timeout
     );
@@ -55,6 +62,7 @@ private:
     IConveyor& conveyor_;
     IGripper& gripper_;
     ISensor& partSensor_;
+    IInspectionSystem* inspectionSystem_;
 
     CycleState currentState_;
 
@@ -63,6 +71,8 @@ private:
     unsigned int rejectedCycles_;
 
     std::optional<bool> inspectionAccepted_;
+    std::optional<std::string> inspectionSampleId_;
+    std::optional<InspectionResult> inspectionResult_;
     std::optional<Fault> fault_;
 
     std::chrono::milliseconds motionTimeout_;

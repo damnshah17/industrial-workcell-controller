@@ -36,6 +36,17 @@ public sealed class PostgresPersistenceTests
                 MachineState = "Idle",
                 Message = "PostgreSQL persistence verified."
             });
+            db.ProductionCycles.Add(new ProductionCycle
+            {
+                Id = Guid.NewGuid(),
+                StartedAt = DateTimeOffset.UtcNow.AddSeconds(-1),
+                CompletedAt = DateTimeOffset.UtcNow,
+                Accepted = false,
+                FinalStatus = "Completed",
+                InspectionReason = "MISSING_FEATURE",
+                InspectionSampleId = "missing-hole",
+                InspectionFeatureCoverage = 0.0
+            });
             await db.SaveChangesAsync();
         }
 
@@ -45,6 +56,14 @@ public sealed class PostgresPersistenceTests
         Assert.Contains(
             events.Items,
             item => item.EventType == "IntegrationTest"
+        );
+        var cycles = await new HistoryService(factory)
+            .GetCyclesAsync(1, 10, CancellationToken.None);
+        Assert.Contains(
+            cycles.Items,
+            item => item.InspectionReason == "MISSING_FEATURE"
+                && item.InspectionSampleId == "missing-hole"
+                && item.Accepted == false
         );
     }
 

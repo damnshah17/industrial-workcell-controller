@@ -24,7 +24,10 @@ public sealed record ProductionCycleDto(
     string FinalStatus,
     bool Faulted,
     string? FaultCode,
-    string? FaultMessage
+    string? FaultMessage,
+    string? InspectionReason = null,
+    string? InspectionSampleId = null,
+    double? InspectionFeatureCoverage = null
 );
 
 public sealed record FaultEventDto(

@@ -1,4 +1,5 @@
 #include "faults/FaultManager.hpp"
+#include "inspection/PgmInspectionSystem.hpp"
 #include "machine/MachineController.hpp"
 #include "machine/MachineState.hpp"
 #include "safety/SafetyController.hpp"
@@ -155,7 +156,26 @@ std::string makeResponse(
         << ","
         << "\"rejected\":"
         << sequence.getRejectedCycles()
-        << "},"
+        << "},";
+
+    if (sequence.getInspectionResult().has_value())
+    {
+        const auto& inspection = sequence.getInspectionResult().value();
+        output
+            << "\"inspection\":{"
+            << "\"state\":\"Complete\","
+            << "\"accepted\":" << (inspection.accepted ? "true" : "false") << ","
+            << "\"reason\":\"" << workcell::toString(inspection.reason) << "\","
+            << "\"sampleId\":\"" << escapeJson(inspection.sampleId) << "\","
+            << "\"featureCoverage\":" << inspection.featureCoverage << ","
+            << "\"details\":\"" << escapeJson(inspection.details) << "\"},";
+    }
+    else
+    {
+        output << "\"inspection\":{\"state\":\"Idle\"},";
+    }
+
+    output
         << "\"robot\":{"
         << "\"position\":\""
         << workcell::toString(robot.getPosition())
@@ -186,6 +206,9 @@ int main()
     workcell::SimConveyor conveyor;
     workcell::SimGripper gripper;
     workcell::SimPartSensor sensor;
+    workcell::PgmInspectionSystem inspection(
+        WORKCELL_INSPECTION_SAMPLE_DIR
+    );
 
     robot.initialize();
     conveyor.initialize();
@@ -196,7 +219,8 @@ int main()
         robot,
         conveyor,
         gripper,
-        sensor
+        sensor,
+        &inspection
     );
 
     workcell::SafetyController safety(
@@ -432,6 +456,24 @@ int main()
                                     command == "cycle-accepted"
                                 );
 
+                                if (!success)
+                                {
+                                    sensor.setActive(false);
+                                }
+                            }
+                        }
+                        else if (command.starts_with("cycle-sample-"))
+                        {
+                            const auto sampleId = command.substr(
+                                std::string("cycle-sample-").size()
+                            );
+                            if (
+                                machine.getState() == workcell::MachineState::Running
+                                && inspection.isKnownSample(sampleId)
+                            )
+                            {
+                                sensor.setActive(true);
+                                success = machine.startProductionCycle(sampleId);
                                 if (!success)
                                 {
                                     sensor.setActive(false);

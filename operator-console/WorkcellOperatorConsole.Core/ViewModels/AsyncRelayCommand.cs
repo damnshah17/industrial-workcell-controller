@@ -16,7 +16,12 @@ public sealed class AsyncRelayCommand(
 
     public async void Execute(object? parameter)
     {
-        if (!CanExecute(parameter))
+        await ExecuteAsync();
+    }
+
+    public async Task ExecuteAsync()
+    {
+        if (!CanExecute(null))
         {
             return;
         }

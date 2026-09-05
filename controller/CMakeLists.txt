@@ -33,6 +33,9 @@ add_library(
     src/SimGripper.cpp
     src/SimPartSensor.cpp
 
+    src/InspectionResult.cpp
+    src/PgmInspectionSystem.cpp
+
     src/CycleState.cpp
     src/SequenceController.cpp
 )
@@ -95,6 +98,12 @@ target_link_libraries(
         workcell_controller
 )
 
+target_compile_definitions(
+    machine_bridge
+    PRIVATE
+        WORKCELL_INSPECTION_SAMPLE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/inspection-samples"
+)
+
 if(UNIX)
     target_link_libraries(
         machine_bridge
@@ -136,6 +145,7 @@ if(BUILD_TESTING)
         tests/CommandTests.cpp
         tests/SimHardwareTests.cpp
         tests/SequenceControllerTests.cpp
+        tests/InspectionSystemTests.cpp
     )
 
     target_link_libraries(
@@ -172,6 +182,25 @@ if(BUILD_TESTING)
 
     set_tests_properties(
         MachineBridgeFaultIntegration
+        PROPERTIES TIMEOUT 30
+    )
+
+    target_compile_definitions(
+        workcell_tests
+        PRIVATE
+            WORKCELL_INSPECTION_SAMPLE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/inspection-samples"
+    )
+
+    add_test(
+        NAME MachineBridgeVisionIntegration
+        COMMAND
+            ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/bridge_vision_integration.py
+            $<TARGET_FILE:machine_bridge>
+    )
+
+    set_tests_properties(
+        MachineBridgeVisionIntegration
         PROPERTIES TIMEOUT 30
     )
 

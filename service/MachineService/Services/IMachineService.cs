@@ -21,6 +21,11 @@ public interface IMachineService
         CancellationToken cancellationToken = default
     );
 
+    Task<bool> StartCycleAsync(
+        string sampleId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<bool> PauseAsync(
         CancellationToken cancellationToken = default
     );

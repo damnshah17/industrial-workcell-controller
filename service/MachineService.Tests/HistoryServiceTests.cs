@@ -83,14 +83,18 @@ public sealed class HistoryServiceTests
         var startedAt = DateTimeOffset.UtcNow.AddSeconds(-2);
 
         await writer.StartAsync(CancellationToken.None);
-        queue.TryEnqueue(new CycleStartedWrite(cycleId, startedAt, true));
+        queue.TryEnqueue(new CycleStartedWrite(cycleId, startedAt, null, "good-part"));
         queue.TryEnqueue(new CycleFinishedWrite(
             cycleId,
             startedAt.AddSeconds(2),
             "Completed",
             false,
             null,
-            null
+            null,
+            true,
+            "PASS",
+            "good-part",
+            1.0
         ));
         queue.TryEnqueue(new FaultRaisedWrite(
             faultId,
@@ -129,6 +133,9 @@ public sealed class HistoryServiceTests
         Assert.NotNull(cycle);
         Assert.Equal(2000, cycle.DurationMilliseconds);
         Assert.True(cycle.Accepted);
+        Assert.Equal("PASS", cycle.InspectionReason);
+        Assert.Equal("good-part", cycle.InspectionSampleId);
+        Assert.Equal(1.0, cycle.InspectionFeatureCoverage);
         Assert.NotNull(fault?.ClearedAt);
     }
 

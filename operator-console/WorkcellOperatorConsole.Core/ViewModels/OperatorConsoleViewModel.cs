@@ -18,6 +18,7 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
     private string _operatorMessage = "Waiting for machine service…";
     private bool _isBusy;
     private DateTimeOffset? _lastUpdated;
+    private string _selectedSample = "good-part";
 
     public OperatorConsoleViewModel(
         IWorkcellApiClient api,
@@ -35,12 +36,8 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
         ResetCommand = CreateCommand("reset");
         EmergencyStopCommand = CreateCommand("estop");
         ClearEmergencyStopCommand = CreateCommand("clear-estop");
-        AcceptedCycleCommand = new AsyncRelayCommand(
-            () => ExecuteCycleAsync(true),
-            () => !IsBusy
-        );
-        RejectedCycleCommand = new AsyncRelayCommand(
-            () => ExecuteCycleAsync(false),
+        StartVisionCycleCommand = new AsyncRelayCommand(
+            ExecuteCycleAsync,
             () => !IsBusy
         );
         RefreshHistoryCommand = new AsyncRelayCommand(
@@ -66,6 +63,8 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
                 OnPropertyChanged(nameof(SafetyText));
                 OnPropertyChanged(nameof(FaultText));
                 OnPropertyChanged(nameof(HasFault));
+                OnPropertyChanged(nameof(InspectionText));
+                OnPropertyChanged(nameof(InspectionDetailsText));
             }
         }
     }
@@ -77,6 +76,8 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
     public string ConnectionText { get => _connectionText; private set => SetProperty(ref _connectionText, value); }
     public string OperatorMessage { get => _operatorMessage; private set => SetProperty(ref _operatorMessage, value); }
     public DateTimeOffset? LastUpdated { get => _lastUpdated; private set => SetProperty(ref _lastUpdated, value); }
+    public IReadOnlyList<string> InspectionSamples { get; } = ["good-part", "missing-hole", "malformed-part", "unreadable-part"];
+    public string SelectedSample { get => _selectedSample; set => SetProperty(ref _selectedSample, value); }
 
     public bool IsBusy
     {
@@ -100,6 +101,14 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
     public string SafetyText => Status?.EmergencyStopActive == true ? "E-STOP ACTIVE" : "SAFETY OK";
     public string FaultText => Status?.ActiveFault is { } fault ? $"{fault.Code}: {fault.Message}" : "NO ACTIVE FAULT";
     public bool HasFault => Status?.ActiveFault is not null;
+    public string InspectionText => Status?.Inspection switch
+    {
+        { State: "Complete", Accepted: true } inspection => $"PASS — {inspection.Reason}",
+        { State: "Complete", Accepted: false } inspection => $"FAIL — {inspection.Reason}",
+        { } inspection => inspection.State.ToUpperInvariant(),
+        null => "IDLE"
+    };
+    public string InspectionDetailsText => Status?.Inspection?.Details ?? "No inspection completed.";
 
     public AsyncRelayCommand InitializeCommand { get; }
     public AsyncRelayCommand StartCommand { get; }
@@ -109,8 +118,7 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
     public AsyncRelayCommand ResetCommand { get; }
     public AsyncRelayCommand EmergencyStopCommand { get; }
     public AsyncRelayCommand ClearEmergencyStopCommand { get; }
-    public AsyncRelayCommand AcceptedCycleCommand { get; }
-    public AsyncRelayCommand RejectedCycleCommand { get; }
+    public AsyncRelayCommand StartVisionCycleCommand { get; }
     public AsyncRelayCommand RefreshHistoryCommand { get; }
 
     public void StartPolling()
@@ -176,13 +184,11 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
         );
     }
 
-    private async Task ExecuteCycleAsync(bool accepted)
+    private async Task ExecuteCycleAsync()
     {
         await ExecuteOperatorActionAsync(
-            token => _api.StartCycleAsync(accepted, token),
-            accepted
-                ? "Accepted-part cycle started."
-                : "Rejected-part cycle started."
+            token => _api.StartCycleAsync(SelectedSample, token),
+            $"Vision cycle started with sample '{SelectedSample}'."
         );
     }
 
@@ -278,8 +284,7 @@ public sealed class OperatorConsoleViewModel : ObservableObject, IDisposable
         ResetCommand.RaiseCanExecuteChanged();
         EmergencyStopCommand.RaiseCanExecuteChanged();
         ClearEmergencyStopCommand.RaiseCanExecuteChanged();
-        AcceptedCycleCommand.RaiseCanExecuteChanged();
-        RejectedCycleCommand.RaiseCanExecuteChanged();
+        StartVisionCycleCommand.RaiseCanExecuteChanged();
         RefreshHistoryCommand.RaiseCanExecuteChanged();
     }
 
