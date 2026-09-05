@@ -76,6 +76,7 @@ public sealed class HistoryServiceTests
         var writer = new HistoryWriterService(
             queue,
             factory,
+            new PersistenceHealthState(),
             NullLogger<HistoryWriterService>.Instance
         );
         var cycleId = Guid.NewGuid();

@@ -91,6 +91,7 @@ public sealed class PostgresPersistenceTests
         var writer = new HistoryWriterService(
             queue,
             factory,
+            new PersistenceHealthState(),
             NullLogger<HistoryWriterService>.Instance
         );
         var tracker = new MachineHistoryTracker(
